@@ -17,12 +17,18 @@ RSpec::Matchers.define :issue_command do |expected|
   supports_block_expectations
 
   match do |actual|
-    commands = []
+    @commands = []
     allow(Redis.current).to receive(:call).and_wrap_original do |redis, *args|
       redis.call(*args)
-      commands << args.join(' ')
+      @commands << args.join(' ')
     end
     actual.call
-    expect(commands).to include expected
+    expect(@commands).to include(expected)
+  end
+
+  failure_message do |actual|
+    "expected command #{expected}\n" \
+      "received commands:\n" \
+      "  #{@commands.join("\n  ")}"
   end
 end
