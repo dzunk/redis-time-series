@@ -12,3 +12,17 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 end
+
+RSpec::Matchers.define :issue_command do |expected|
+  supports_block_expectations
+
+  match do |actual|
+    commands = []
+    allow(Redis.current).to receive(:call).and_wrap_original do |redis, *args|
+      redis.call(*args)
+      commands << args.join(' ')
+    end
+    actual.call
+    expect(commands).to include expected
+  end
+end

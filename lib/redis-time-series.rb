@@ -1,3 +1,4 @@
+require 'redis'
 require 'redis/time_series'
 
 class RedisTimeSeries
