@@ -5,4 +5,6 @@ require 'pry'
 require 'redis'
 require 'redis-time-series'
 
+Redis.current.flushall
+@ts = Redis::TimeSeries.create('foo')
 Pry.start
