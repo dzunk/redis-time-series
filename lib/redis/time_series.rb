@@ -36,7 +36,10 @@ class Redis
     end
 
     def info
-
+      redis.call('TS.INFO', key).each_slice(2).reduce({}) do |h, (key, value)|
+        h[key.gsub(/(.)([A-Z])/,'\1_\2').downcase] = value
+        h
+      end
     end
 
     def labels=(val)

@@ -76,6 +76,28 @@ RSpec.describe Redis::TimeSeries do
   describe 'TS.GET'
   describe 'TS.MGET'
 
-  describe 'TS.INFO'
+  describe 'TS.INFO' do
+    subject(:info) { ts.info }
+
+    specify { expect { info }.to issue_command "TS.INFO #{key}" }
+
+    it 'returns an info hash' do
+      expect(info).to eq(
+        {
+          'total_samples' => 0,
+          'memory_usage' => 4184,
+          'first_timestamp' => 0,
+          'last_timestamp' => 0,
+          'retention_time' => 0,
+          'chunk_count' => 1,
+          'max_samples_per_chunk' => 256,
+          'labels' => [],
+          'source_key' => nil,
+          'rules' => []
+        }
+      )
+    end
+  end
+
   describe 'TS.QUERYINDEX'
 end
