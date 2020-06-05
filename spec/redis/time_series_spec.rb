@@ -62,7 +62,21 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  describe 'TS.ALTER'
+  describe 'TS.ALTER' do
+    context 'altering the retention period' do
+      specify do
+        expect { ts.retention = 1234 }.to issue_command "TS.ALTER #{key} RETENTION 1234"
+      end
+    end
+
+    context 'altering the labels' do
+      specify do
+        expect { ts.labels = { foo: 'bar' } }.to issue_command \
+          "TS.ALTER #{key} LABELS foo bar"
+      end
+    end
+  end
+
   describe 'TS.ADD'
   describe 'TS.MADD'
   describe 'TS.INCRBY'
