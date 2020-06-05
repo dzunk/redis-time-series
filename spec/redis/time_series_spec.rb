@@ -77,7 +77,24 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  describe 'TS.ADD'
+  describe 'TS.ADD' do
+    context 'without a timestamp' do
+      specify do
+        expect { ts.add 123 }.to issue_command "TS.ADD #{key} * 123"
+      end
+    end
+
+    context 'with a timestamp' do
+      specify do
+        expect { ts.add 123, 1591339859 }.to issue_command "TS.ADD #{key} 1591339859 123"
+      end
+    end
+
+    context 'with an invalid value' do
+      specify { expect { ts.add 'bar' }.to raise_error Redis::CommandError }
+    end
+  end
+
   describe 'TS.MADD'
   describe 'TS.INCRBY'
   describe 'TS.DECRBY'

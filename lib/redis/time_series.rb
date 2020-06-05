@@ -5,7 +5,6 @@ class Redis
       def create(key, **options)
         new(key, **options).create
       end
-
     end
 
     attr_reader :key, :labels, :redis, :retention, :uncompressed
