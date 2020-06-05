@@ -15,7 +15,7 @@ class Redis
       @labels = options[:labels] || []
       @redis = options[:redis] || Redis.current
       @retention = options[:retention]
-      @uncompressed = options[:uncompressed]
+      @uncompressed = options[:uncompressed] || false
     end
 
     def add(value, timestamp = '*')
@@ -33,6 +33,10 @@ class Redis
 
     def destroy
       redis.del key
+    end
+
+    def info
+
     end
 
     def labels=(val)
