@@ -3,6 +3,7 @@ RSpec.describe Redis::TimeSeries do
   subject(:ts) { described_class.create(key) }
 
   let(:key) { 'time_series_test' }
+  let(:time) { 1591339859 }
 
   after { Redis.current.del key }
 
@@ -86,7 +87,7 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with a timestamp' do
       specify do
-        expect { ts.add 123, 1591339859 }.to issue_command "TS.ADD #{key} 1591339859 123"
+        expect { ts.add 123, time }.to issue_command "TS.ADD #{key} #{time} 123"
       end
     end
 
@@ -99,25 +100,35 @@ RSpec.describe Redis::TimeSeries do
     let(:madd) { ts.madd(values) }
 
     context 'with a hash of timestamps and values' do
-      let(:values) { { 1591339859 => 12, 1591339860 => 34 } }
-
       specify do
-        expect { madd }.to issue_command \
+        expect { ts.madd(1591339859 => 12, 1591339860 => 34) }.to issue_command \
           "TS.MADD #{key} 1591339859 12 #{key} 1591339860 34"
       end
     end
 
     context 'with an array of values' do
-      let(:values) { [56, 78, 9] }
-
       specify do
-        expect { madd }.to issue_command \
+        expect { ts.madd [56, 78, 9] }.to issue_command \
           "TS.MADD #{key} * 56 #{key} * 78 #{key} * 9"
+      end
+    end
+
+    context 'passed values directly' do
+      specify do
+        expect { ts.madd 1, 2, 3 }.to issue_command \
+          "TS.MADD #{key} * 1 #{key} * 2 #{key} * 3"
       end
     end
   end
 
-  describe 'TS.INCRBY'
+  describe 'TS.INCRBY' do
+    specify { expect { ts.incrby 1 }.to issue_command "TS.INCRBY #{key} 1" }
+
+    context 'with a timestamp' do
+      specify { expect { ts.incrby 1, time }.to issue_command "TS.INCRBY #{key} 1 #{time}" }
+    end
+  end
+
   describe 'TS.DECRBY'
 
   describe 'TS.CREATERULE'

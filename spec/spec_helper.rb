@@ -1,4 +1,5 @@
 require 'bundler/setup'
+require 'pry'
 require 'redis-time-series'
 
 RSpec.configure do |config|

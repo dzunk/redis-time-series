@@ -18,7 +18,7 @@ class Redis
     end
 
     def add(value, timestamp = '*')
-      redis.call 'TS.ADD', key, timestamp, value
+      cmd 'TS.ADD', key, timestamp, value
     end
 
     def create
@@ -26,7 +26,7 @@ class Redis
       args << "RETENTION #{retention}" if retention
       args << "UNCOMPRESSED" if uncompressed
       args << "LABELS #{label_string}" if labels.any?
-      redis.call 'TS.CREATE', args
+      cmd 'TS.CREATE', args
       self
     end
 
@@ -35,7 +35,7 @@ class Redis
     end
 
     def info
-      redis.call('TS.INFO', key).each_slice(2).reduce({}) do |h, (key, value)|
+      cmd('TS.INFO', key).each_slice(2).reduce({}) do |h, (key, value)|
         h[key.gsub(/(.)([A-Z])/,'\1_\2').downcase] = value
         h
       end
@@ -43,25 +43,35 @@ class Redis
 
     def labels=(val)
       @labels = val
-      redis.call 'TS.ALTER', key, 'LABELS', label_string
+      cmd 'TS.ALTER', key, 'LABELS', label_string
     end
 
     # TODO: class method for adding to multiple time-series
     def madd(*values)
-      if values.one?
+      if values.one? && values.first.is_a?(Hash)
+        # Hash of timestamp => value pairs
         args = values.first.map { |ts, val| [key, ts, val] }.flatten
+      elsif values.one? && values.first.is_a?(Array)
+        # Array of values, no timestamps
+        args = values.first.map { |val| [key, '*', val] }.flatten
       else
+        # Values as individual arguments, no timestamps
         args = values.map { |val| [key, '*', val] }.flatten
       end
-      redis.call 'TS.MADD', args
+      cmd 'TS.MADD', args
     end
 
     def retention=(val)
       @retention = val.to_i
-      redis.call 'TS.ALTER', key, 'RETENTION', val.to_i
+      cmd 'TS.ALTER', key, 'RETENTION', val.to_i
     end
 
     private
+
+    def cmd(name, *args)
+      puts "DEBUG: #{name} #{args.join(' ')}" if ENV['DEBUG']
+      redis.call name, *args
+    end
 
     def label_string
       labels.map { |label, value| "#{label} #{value}" }.join(' ')
