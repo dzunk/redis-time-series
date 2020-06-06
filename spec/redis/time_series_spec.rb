@@ -129,7 +129,13 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  describe 'TS.DECRBY'
+  describe 'TS.DECRBY' do
+    specify { expect { ts.decrby 1 }.to issue_command "TS.DECRBY #{key} 1" }
+
+    context 'with a timestamp' do
+      specify { expect { ts.decrby 1, time }.to issue_command "TS.DECRBY #{key} 1 #{time}" }
+    end
+  end
 
   describe 'TS.CREATERULE'
   describe 'TS.DELETERULE'

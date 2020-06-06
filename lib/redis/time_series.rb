@@ -30,8 +30,20 @@ class Redis
       self
     end
 
+    def decrby(value, timestamp = nil)
+    args = [key, value]
+    args << timestamp if timestamp
+    cmd 'TS.DECRBY', args
+    end
+
     def destroy
       redis.del key
+    end
+
+    def incrby(value, timestamp = nil)
+      args = [key, value]
+      args << timestamp if timestamp
+      cmd 'TS.INCRBY', args
     end
 
     def info
