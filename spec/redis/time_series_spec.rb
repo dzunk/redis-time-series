@@ -4,6 +4,8 @@ RSpec.describe Redis::TimeSeries do
 
   let(:key) { 'time_series_test' }
   let(:time) { 1591339859 }
+  let(:from) { time }
+  let(:to) { time + 120 }
 
   after { Redis.current.del key }
 
@@ -140,8 +142,28 @@ RSpec.describe Redis::TimeSeries do
   describe 'TS.CREATERULE'
   describe 'TS.DELETERULE'
 
-  describe 'TS.RANGE'
-  describe 'TS.MRANGE'
+  describe 'TS.RANGE' do
+    specify do
+      expect { ts.range from: from, to: to }.to issue_command "TS.RANGE #{key} #{from} #{to}"
+    end
+
+    context 'given a range' do
+      specify do
+        expect { ts.range from..to }.to issue_command "TS.RANGE #{key} #{from} #{to}"
+      end
+    end
+
+    context 'with a maximum result count' do
+      specify do
+        expect { ts.range from..to, count: 10 }.to issue_command \
+          "TS.RANGE #{key} #{from} #{to} COUNT 10"
+      end
+    end
+
+    context 'with an aggregation' # TODO
+  end
+
+  describe 'TS.MRANGE' # TODO: class method for querying multiple time-series
   describe 'TS.GET'
   describe 'TS.MGET'
 

@@ -73,6 +73,17 @@ class Redis
       cmd 'TS.MADD', args
     end
 
+    def range(range, count: nil, agg: nil)
+      if range.is_a? Hash
+        args = range.fetch(:from), range.fetch(:to)
+      elsif range.is_a? Range
+        args = range.min, range.max
+      end
+      args.append('COUNT', count) if count
+      # TODO: aggregations
+      cmd 'TS.RANGE', key, args
+    end
+
     def retention=(val)
       @retention = val.to_i
       cmd 'TS.ALTER', key, 'RETENTION', val.to_i
