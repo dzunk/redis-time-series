@@ -95,7 +95,28 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  describe 'TS.MADD'
+  describe 'TS.MADD' do
+    let(:madd) { ts.madd(values) }
+
+    context 'with a hash of timestamps and values' do
+      let(:values) { { 1591339859 => 12, 1591339860 => 34 } }
+
+      specify do
+        expect { madd }.to issue_command \
+          "TS.MADD #{key} 1591339859 12 #{key} 1591339860 34"
+      end
+    end
+
+    context 'with an array of values' do
+      let(:values) { [56, 78, 9] }
+
+      specify do
+        expect { madd }.to issue_command \
+          "TS.MADD #{key} * 56 #{key} * 78 #{key} * 9"
+      end
+    end
+  end
+
   describe 'TS.INCRBY'
   describe 'TS.DECRBY'
 

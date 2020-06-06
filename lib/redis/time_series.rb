@@ -46,6 +46,16 @@ class Redis
       redis.call 'TS.ALTER', key, 'LABELS', label_string
     end
 
+    # TODO: class method for adding to multiple time-series
+    def madd(*values)
+      if values.one?
+        args = values.first.map { |ts, val| [key, ts, val] }.flatten
+      else
+        args = values.map { |val| [key, '*', val] }.flatten
+      end
+      redis.call 'TS.MADD', args
+    end
+
     def retention=(val)
       @retention = val.to_i
       redis.call 'TS.ALTER', key, 'RETENTION', val.to_i
