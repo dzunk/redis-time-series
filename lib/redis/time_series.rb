@@ -40,6 +40,11 @@ class Redis
       redis.del key
     end
 
+    def get
+      # TODO: Redis::TimeSeries::Sample value object
+      cmd 'TS.GET', key
+    end
+
     def incrby(value, timestamp = nil)
       args = [key, value]
       args << timestamp if timestamp

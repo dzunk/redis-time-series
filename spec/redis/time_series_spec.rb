@@ -164,7 +164,11 @@ RSpec.describe Redis::TimeSeries do
   end
 
   describe 'TS.MRANGE' # TODO: class method for querying multiple time-series
-  describe 'TS.GET'
+
+  describe 'TS.GET' do
+    specify { expect { ts.get }.to issue_command "TS.GET #{key}" }
+  end
+
   describe 'TS.MGET'
 
   describe 'TS.INFO' do
