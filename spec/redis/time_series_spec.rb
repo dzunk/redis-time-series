@@ -167,6 +167,12 @@ RSpec.describe Redis::TimeSeries do
 
   describe 'TS.GET' do
     specify { expect { ts.get }.to issue_command "TS.GET #{key}" }
+
+    it 'returns a Sample' do
+      timestamp = ts.increment
+      expect(ts.get).to be_a Redis::TimeSeries::Sample
+      expect(ts.get.ts_msec).to eq timestamp
+    end
   end
 
   describe 'TS.MGET'

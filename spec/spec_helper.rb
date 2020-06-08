@@ -20,8 +20,8 @@ RSpec::Matchers.define :issue_command do |expected|
   match do |actual|
     @commands = []
     allow(Redis.current).to receive(:call).and_wrap_original do |redis, *args|
-      redis.call(*args)
       @commands << args.join(' ')
+      redis.call(*args)
     end
     actual.call
     expect(@commands).to include(expected)

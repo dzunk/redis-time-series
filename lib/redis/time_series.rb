@@ -30,26 +30,30 @@ class Redis
       self
     end
 
-    def decrby(value, timestamp = nil)
-    args = [key, value]
-    args << timestamp if timestamp
-    cmd 'TS.DECRBY', args
+    def decrby(value = 1, timestamp = nil)
+      args = [key, value]
+      args << timestamp if timestamp
+      cmd 'TS.DECRBY', args
     end
+    alias decrement decrby
 
     def destroy
       redis.del key
     end
 
     def get
-      # TODO: Redis::TimeSeries::Sample value object
-      cmd 'TS.GET', key
+      cmd('TS.GET', key).then do |timestamp, value|
+        return unless value
+        Sample.new(timestamp, value)
+      end
     end
 
-    def incrby(value, timestamp = nil)
+    def incrby(value = 1, timestamp = nil)
       args = [key, value]
       args << timestamp if timestamp
       cmd 'TS.INCRBY', args
     end
+    alias increment incrby
 
     def info
       cmd('TS.INFO', key).each_slice(2).reduce({}) do |h, (key, value)|
