@@ -14,6 +14,13 @@ class Redis
       def ts_msec
         (@time.to_i * TS_FACTOR.to_i) + (@time.usec / TS_FACTOR).round
       end
+
+      def to_h
+        {
+          timestamp: ts_msec,
+          value: value
+        }
+      end
     end
   end
 end
