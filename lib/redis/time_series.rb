@@ -91,7 +91,9 @@ class Redis
       args.map! { |ts| (ts.to_f * 1000).to_i }
       args.append('COUNT', count) if count
       # TODO: aggregations
-      cmd 'TS.RANGE', key, args
+      cmd('TS.RANGE', key, args).map do |ts, val|
+        Sample.new(ts, val)
+      end
     end
 
     def retention=(val)

@@ -165,6 +165,15 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with an aggregation' # TODO
+
+    it 'returns an array of Samples' do
+      values = [2, 4, 6]
+      ts.madd values
+      results = ts.range(1.minute.ago..1.minute.from_now)
+      binding.pry
+      expect(results.size).to eq 3
+      expect(results.map(&:value)).to eq values
+    end
   end
 
   describe 'TS.MRANGE' # TODO: class method for querying multiple time-series
