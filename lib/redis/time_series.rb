@@ -88,6 +88,7 @@ class Redis
       elsif range.is_a? Range
         args = range.min, range.max
       end
+      args.map! { |ts| (ts.to_f * 1000).to_i }
       args.append('COUNT', count) if count
       # TODO: aggregations
       cmd 'TS.RANGE', key, args

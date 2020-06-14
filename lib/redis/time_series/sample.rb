@@ -12,7 +12,7 @@ class Redis
       end
 
       def ts_msec
-        (@time.to_i * TS_FACTOR.to_i) + (@time.usec / TS_FACTOR).round
+        (time.to_f * TS_FACTOR).to_i
       end
 
       def to_h

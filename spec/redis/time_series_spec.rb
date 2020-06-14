@@ -9,6 +9,10 @@ RSpec.describe Redis::TimeSeries do
 
   after { Redis.current.del key }
 
+  def msec(ts)
+    (ts.to_f * 1000).to_i
+  end
+
   describe 'TS.CREATE' do
     subject(:create) { described_class.create(key, **options) }
     let(:options) { {} }
@@ -144,19 +148,19 @@ RSpec.describe Redis::TimeSeries do
 
   describe 'TS.RANGE' do
     specify do
-      expect { ts.range from: from, to: to }.to issue_command "TS.RANGE #{key} #{from} #{to}"
+      expect { ts.range from: from, to: to }.to issue_command "TS.RANGE #{key} #{msec from} #{msec to}"
     end
 
     context 'given a range' do
       specify do
-        expect { ts.range from..to }.to issue_command "TS.RANGE #{key} #{from} #{to}"
+        expect { ts.range from..to }.to issue_command "TS.RANGE #{key} #{msec from} #{msec to}"
       end
     end
 
     context 'with a maximum result count' do
       specify do
         expect { ts.range from..to, count: 10 }.to issue_command \
-          "TS.RANGE #{key} #{from} #{to} COUNT 10"
+          "TS.RANGE #{key} #{msec from} #{msec to} COUNT 10"
       end
     end
 
