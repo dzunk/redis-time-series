@@ -1,9 +1,19 @@
 #!/usr/bin/env ruby
 
 require 'bundler/setup'
+require 'active_support/core_ext/numeric/time'
 require 'pry'
 require 'redis-time-series'
 
 Redis.current.flushall
-@ts = Redis::TimeSeries.create('foo')
+
+@ts1 = Redis::TimeSeries.create('foo')
+@ts2 = Redis::TimeSeries.create('bar')
+@ts3 = Redis::TimeSeries.create('baz')
+
+@series = [@ts1, @ts2, @ts3]
+@series.each do |ts|
+  3.times { ts.increment }
+end
+
 Pry.start

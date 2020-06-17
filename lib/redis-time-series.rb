@@ -1,4 +1,5 @@
 require 'bigdecimal'
+require 'time/msec'
 require 'redis'
 require 'redis/time_series'
 require 'redis/time_series/sample'

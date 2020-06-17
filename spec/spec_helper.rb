@@ -1,4 +1,6 @@
 require 'bundler/setup'
+require 'active_support/core_ext/numeric/time'
+require 'active_support/testing/time_helpers'
 require 'pry'
 require 'redis-time-series'
 
@@ -12,6 +14,8 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  config.include ActiveSupport::Testing::TimeHelpers
 end
 
 RSpec::Matchers.define :issue_command do |expected|
