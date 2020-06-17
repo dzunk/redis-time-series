@@ -18,7 +18,8 @@ class Redis
     end
 
     def add(value, timestamp = '*')
-      cmd 'TS.ADD', key, timestamp, value
+      ts = cmd 'TS.ADD', key, timestamp, value
+      Sample.new(ts, value)
     end
 
     def create

@@ -100,6 +100,12 @@ RSpec.describe Redis::TimeSeries do
     context 'with an invalid value' do
       specify { expect { ts.add 'bar' }.to raise_error Redis::CommandError }
     end
+
+    it 'returns the added Sample' do
+      s = ts.add 123
+      expect(s).to be_a Redis::TimeSeries::Sample
+      expect(s.value).to eq 123
+    end
   end
 
   describe 'TS.MADD' do
