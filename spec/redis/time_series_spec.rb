@@ -143,6 +143,25 @@ RSpec.describe Redis::TimeSeries do
           "TS.MADD #{key} #{ts_msec} 1 #{key} #{ts_msec + 1} 2 #{key} #{ts_msec + 2} 3"
       end
     end
+
+    describe 'with multiple series' do
+      specify do
+        expect { described_class.madd(foo: 1, bar: 2, baz: 3) }.to issue_command \
+          "TS.MADD foo * 1 bar * 2 baz * 3"
+      end
+
+      specify do
+        expect do
+          described_class.madd(foo: { 123 => 1 }, bar: { 456 => 2, 678 => 3 })
+        end.to issue_command "TS.MADD foo 123 1 bar 456 2 bar 678 3"
+      end
+
+      specify do
+        expect do
+          described_class.madd(foo: [123, 1], bar: [[456, 2], [678, 3]])
+        end.to issue_command "TS.MADD foo 123 1 bar 456 2 bar 678 3"
+      end
+    end
   end
 
   describe 'TS.INCRBY' do

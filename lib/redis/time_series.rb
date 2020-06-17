@@ -5,19 +5,52 @@ class Redis
       def create(key, **options)
         new(key, **options).create
       end
+
+      def madd(data)
+        data.reduce([]) do |memo, (key, value)|
+          if value.is_a?(Hash) || (value.is_a?(Array) && value.first.is_a?(Array))
+            # multiple timestamp => value pairs
+            value.each do |timestamp, nested_value|
+              memo << [key, timestamp, nested_value]
+            end
+          elsif value.is_a? Array
+            # single [timestamp, value]
+            memo << [key, value]
+          else
+            # single value, no timestamp
+            memo << [key, '*', value]
+          end
+          memo
+        end.then do |args|
+          puts "DEBUG: TS.MADD #{args.join(' ')}" if ENV['DEBUG']
+          redis.call('TS.MADD', args.flatten).each_with_index.map do |result, idx|
+            result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
+          end
+        end
+      end
+
+      def redis
+        @redis ||= Redis.current
+      end
+
+      def redis=(client)
+        @redis = redis
+      end
     end
 
     attr_reader :key, :labels, :redis, :retention, :uncompressed
 
     def initialize(key, options = {})
       @key = key
+      # TODO: read labels from redis if not loaded in memory
       @labels = options[:labels] || []
-      @redis = options[:redis] || Redis.current
+      @redis = options[:redis] || self.class.redis
       @retention = options[:retention]
       @uncompressed = options[:uncompressed] || false
     end
 
     def add(value, timestamp = '*')
+      # TODO: handle ten-digit (second-precision) timestamps
       ts = cmd 'TS.ADD', key, timestamp, value
       Sample.new(ts, value)
     end
@@ -56,6 +89,7 @@ class Redis
     end
     alias increment incrby
 
+    # TODO: extract Info module, with methods for each property
     def info
       cmd('TS.INFO', key).each_slice(2).reduce({}) do |h, (key, value)|
         h[key.gsub(/(.)([A-Z])/,'\1_\2').downcase] = value
@@ -68,7 +102,6 @@ class Redis
       cmd 'TS.ALTER', key, 'LABELS', label_string
     end
 
-    # TODO: class method for adding to multiple time-series
     def madd(*values)
       if values.one? && values.first.is_a?(Hash)
         # Hash of timestamp => value pairs
@@ -86,6 +119,7 @@ class Redis
           [key, initial_ts + idx, val]
         end.flatten
       end
+      # TODO: return Sample objects here
       cmd 'TS.MADD', args
     end
 
