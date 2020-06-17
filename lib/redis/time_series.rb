@@ -74,10 +74,16 @@ class Redis
         args = values.first.map { |ts, val| [key, ts, val] }.flatten
       elsif values.one? && values.first.is_a?(Array)
         # Array of values, no timestamps
-        args = values.first.map { |val| [key, '*', val] }.flatten
+        initial_ts = Time.now.ts_msec
+        args = values.first.each_with_index.map do |val, idx|
+          [key, initial_ts + idx, val]
+        end.flatten
       else
         # Values as individual arguments, no timestamps
-        args = values.map { |val| [key, '*', val] }.flatten
+        initial_ts = Time.now.ts_msec
+        args = values.each_with_index.map do |val, idx|
+          [key, initial_ts + idx, val]
+        end.flatten
       end
       cmd 'TS.MADD', args
     end

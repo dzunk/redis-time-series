@@ -113,16 +113,28 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with an array of values' do
+      let(:time) { Time.now }
+      let(:ts_msec) { time.to_i * 1000 }
+
+      before { travel_to time } # TODO: freeze_time metadata
+      after { travel_back }
+
       specify do
         expect { ts.madd [56, 78, 9] }.to issue_command \
-          "TS.MADD #{key} * 56 #{key} * 78 #{key} * 9"
+          "TS.MADD #{key} #{ts_msec} 56 #{key} #{ts_msec + 1} 78 #{key} #{ts_msec + 2} 9"
       end
     end
 
     context 'passed values directly' do
+      let(:time) { Time.now }
+      let(:ts_msec) { time.to_i * 1000 }
+
+      before { travel_to time }
+      after { travel_back }
+
       specify do
         expect { ts.madd 1, 2, 3 }.to issue_command \
-          "TS.MADD #{key} * 1 #{key} * 2 #{key} * 3"
+          "TS.MADD #{key} #{ts_msec} 1 #{key} #{ts_msec + 1} 2 #{key} #{ts_msec + 2} 3"
       end
     end
   end
@@ -170,7 +182,6 @@ RSpec.describe Redis::TimeSeries do
       values = [2, 4, 6]
       ts.madd values
       results = ts.range(1.minute.ago..1.minute.from_now)
-      binding.pry
       expect(results.size).to eq 3
       expect(results.map(&:value)).to eq values
     end
