@@ -10,6 +10,7 @@ docker run -p 6379:6379 -it --rm redislabs/redistimeseries
 
 **TL;DR**
 ```ruby
+require 'redis-time-series'
 ts = Redis::TimeSeries.new('foo')
 ts.add 1234
 => #<Redis::TimeSeries::Sample:0x00007f8c0d2561d8 @time=2020-06-25 23:23:04 -0700, @value=0.1234e4>
@@ -48,7 +49,7 @@ Create a series (issues `TS.CREATE` command) and return a Redis::TimeSeries obje
 ```ruby
 ts = Redis::TimeSeries.create(
   'your_ts_key',
-  labels: ['foo', 'bar'],
+  labels: { foo: 'bar' },
   retention: 600,
   uncompressed: false,
   redis: Redis.new(url: ENV['REDIS_URL']) # defaults to Redis.current
@@ -127,6 +128,20 @@ ts.range from: 10.minutes.ago, to: Time.current # Time range as keyword args
  #<Redis::TimeSeries::Sample:0x00007fa25dc01b68 @time=2020-06-25 23:50:57 -0700, @value=0.57e2>,
  #<Redis::TimeSeries::Sample:0x00007fa25dc019b0 @time=2020-06-25 23:51:30 -0700, @value=0.58e2>]
 ```
+Get info about the series
+```ruby
+ts.info
+=> {"total_samples"=>3,
+ "memory_usage"=>4184,
+ "first_timestamp"=>1593155422582,
+ "last_timestamp"=>1593155709333,
+ "retention_time"=>0,
+ "chunk_count"=>1,
+ "max_samples_per_chunk"=>256,
+ "labels"=>[],
+ "source_key"=>nil,
+ "rules"=>[]}
+```
 
 ### TODO
 * `TS.REVRANGE`
@@ -140,7 +155,22 @@ ts.range from: 10.minutes.ago, to: Time.current # Time range as keyword args
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+In order to run the specs or use the console, you'll need a Redis server running on the default port 6379 with the RedisTimeSeries module enabled. The easiest way to do so is by running the Docker image:
+```
+docker run -p 6379:6379 -it --rm redislabs/redistimeseries
+```
+
+The `bin/console` script will set up three time series, `@ts1`, `@ts2`, and `@ts3`, with three values in each. **It will also flush the local Redis server each time you run it**, so don't try it if you have data you don't want to lose!
+
+If you want to see the commands being executed, run the console with `DEBUG=true bin/console` and it will output the raw command strings as they're executed.
+```ruby
+[1] pry(main)> @ts1.increment
+DEBUG: TS.INCRBY foo 1
+=> 1593159795467
+[2] pry(main)> @ts1.get
+DEBUG: TS.GET foo
+=> #<Redis::TimeSeries::Sample:0x00007f8e1a190cf8 @time=2020-06-26 01:23:15 -0700, @value=0.4e1>
+```
 
 ## Contributing
 
