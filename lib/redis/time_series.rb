@@ -11,10 +11,12 @@ class Redis
           if value.is_a?(Hash) || (value.is_a?(Array) && value.first.is_a?(Array))
             # multiple timestamp => value pairs
             value.each do |timestamp, nested_value|
+              timestamp = timestamp.ts_msec if timestamp.is_a? Time
               memo << [key, timestamp, nested_value]
             end
           elsif value.is_a? Array
             # single [timestamp, value]
+            key = key.ts_msec if key.is_a? Time
             memo << [key, value]
           else
             # single value, no timestamp
@@ -50,7 +52,7 @@ class Redis
     end
 
     def add(value, timestamp = '*')
-      # TODO: handle ten-digit (second-precision) timestamps
+      timestamp = timestamp.ts_msec if timestamp.is_a? Time
       ts = cmd 'TS.ADD', key, timestamp, value
       Sample.new(ts, value)
     end
@@ -105,7 +107,10 @@ class Redis
     def madd(*values)
       if values.one? && values.first.is_a?(Hash)
         # Hash of timestamp => value pairs
-        args = values.first.map { |ts, val| [key, ts, val] }.flatten
+        args = values.first.map do |ts, val|
+          ts = ts.ts_msec if ts.is_a? Time
+          [key, ts, val]
+        end.flatten
       elsif values.one? && values.first.is_a?(Array)
         # Array of values, no timestamps
         initial_ts = Time.now.ts_msec
@@ -131,7 +136,7 @@ class Redis
       end
       args.map! { |ts| (ts.to_f * 1000).to_i }
       args.append('COUNT', count) if count
-      # TODO: aggregations
+      args.append('AGGREGATION', agg) if agg
       cmd('TS.RANGE', key, args).map do |ts, val|
         Sample.new(ts, val)
       end
