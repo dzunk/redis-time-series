@@ -1,4 +1,4 @@
-![](https://github.com/dzunk/redis-time-series/workflows/.github/workflows/rspec.yml/badge.svg)
+![](https://github.com/dzunk/redis-time-series/workflows/RSpec/badge.svg)
 
 # RedisTimeSeries
 
