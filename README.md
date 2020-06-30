@@ -1,3 +1,5 @@
+![](https://github.com/dzunk/redis-time-series/workflows/.github/workflows/rspec.yml/badge.svg)
+
 # RedisTimeSeries
 
 A Ruby adapter for the [RedisTimeSeries module](https://oss.redislabs.com/redistimeseries).
