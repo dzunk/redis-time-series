@@ -14,7 +14,9 @@ RSpec.describe Redis::TimeSeries do
   end
 
   describe 'TS.CREATE' do
-    subject(:create) { described_class.create(key, **options) }
+    subject(:ts) { described_class.new(key) }
+
+    let(:create) { described_class.create(key, **options) }
     let(:options) { {} }
 
     context 'with no arguments' do
@@ -50,6 +52,12 @@ RSpec.describe Redis::TimeSeries do
 
       specify do
         expect { create }.to issue_command "TS.CREATE #{key} LABELS foo bar baz 1 plugh true"
+        expect(ts.info['labels']).to eq [
+          # TODO: cast values
+          ['foo', 'bar'],
+          ['baz', '1'],
+          ['plugh', 'true']
+        ]
       end
     end
 
