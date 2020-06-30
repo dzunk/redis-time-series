@@ -88,6 +88,7 @@ RSpec.describe Redis::TimeSeries do
       specify do
         expect { ts.labels = { foo: 'bar' } }.to issue_command \
           "TS.ALTER #{key} LABELS foo bar"
+        expect(ts.info['labels']).to eq [['foo', 'bar']]
       end
     end
   end
