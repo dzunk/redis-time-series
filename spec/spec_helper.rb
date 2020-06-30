@@ -2,6 +2,7 @@ require 'bundler/setup'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/testing/time_helpers'
 require 'pry'
+require 'redis'
 require 'redis-time-series'
 
 RSpec.configure do |config|
