@@ -59,10 +59,10 @@ class Redis
 
     def create
       args = [key]
-      args << "RETENTION #{retention}" if retention
-      args << "UNCOMPRESSED" if uncompressed
-      args << "LABELS #{label_string}" if labels.any?
-      cmd 'TS.CREATE', args
+      args << ['RETENTION', retention] if retention
+      args << 'UNCOMPRESSED' if uncompressed
+      args << ['LABELS', labels.to_a] if labels.any?
+      cmd 'TS.CREATE', args.flatten
       self
     end
 
@@ -101,7 +101,7 @@ class Redis
 
     def labels=(val)
       @labels = val
-      cmd 'TS.ALTER', key, 'LABELS', label_string
+      cmd 'TS.ALTER', key, 'LABELS', labels.to_a.flatten
     end
 
     def madd(*values)
@@ -152,10 +152,6 @@ class Redis
     def cmd(name, *args)
       puts "DEBUG: #{name} #{args.join(' ')}" if ENV['DEBUG']
       redis.call name, *args
-    end
-
-    def label_string
-      labels.map { |label, value| "#{label} #{value}" }.join(' ')
     end
   end
 end
