@@ -221,7 +221,37 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
+  describe 'TS.REVANGE' do
+    specify do
+      expect { ts.revrange from: from, to: to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
+    end
+
+    context 'given a range' do
+      specify do
+        expect { ts.revrange from..to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
+      end
+    end
+
+    context 'with a maximum result count' do
+      specify do
+        expect { ts.revrange from..to, count: 10 }.to issue_command \
+          "TS.REVRANGE #{key} #{msec from} #{msec to} COUNT 10"
+      end
+    end
+
+    context 'with an aggregation' # TODO
+
+    it 'returns an array of Samples' do
+      values = [2, 4, 6]
+      ts.madd values
+      results = ts.revrange(1.minute.ago..1.minute.from_now)
+      expect(results.size).to eq 3
+      expect(results.map(&:value)).to eq values.reverse
+    end
+  end
+
   describe 'TS.MRANGE' # TODO: class method for querying multiple time-series
+  describe 'TS.MREVRANGE'
 
   describe 'TS.GET' do
     specify { expect { ts.get }.to issue_command "TS.GET #{key}" }

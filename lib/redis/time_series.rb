@@ -139,6 +139,20 @@ class Redis
       end
     end
 
+    def revrange(range, count: nil, agg: nil)
+      if range.is_a? Hash
+        args = range.fetch(:from), range.fetch(:to)
+      elsif range.is_a? Range
+        args = range.min, range.max
+      end
+      args.map! { |ts| (ts.to_f * 1000).to_i }
+      args.append('COUNT', count) if count
+      args.append('AGGREGATION', agg) if agg
+      cmd('TS.REVRANGE', key, args).map do |ts, val|
+        Sample.new(ts, val)
+      end
+    end
+
     def retention=(val)
       @retention = val.to_i
       cmd 'TS.ALTER', key, 'RETENTION', val.to_i
