@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 class Redis
   class TimeSeries
+    extend Forwardable
+
     class << self
       def create(key, **options)
         new(key, **options).create
@@ -40,7 +42,7 @@ class Redis
       end
     end
 
-    attr_reader :key, :labels, :redis, :retention, :uncompressed
+    attr_reader :key, :redis, :retention, :uncompressed
 
     def initialize(key, options = {})
       @key = key
@@ -61,7 +63,7 @@ class Redis
       args = [key]
       args << ['RETENTION', retention] if retention
       args << 'UNCOMPRESSED' if uncompressed
-      args << ['LABELS', labels.to_a] if labels.any?
+      args << ['LABELS', @labels.to_a] if @labels.any?
       cmd 'TS.CREATE', args.flatten
       self
     end
@@ -91,17 +93,16 @@ class Redis
     end
     alias increment incrby
 
-    # TODO: extract Info module, with methods for each property
     def info
-      cmd('TS.INFO', key).each_slice(2).reduce({}) do |h, (key, value)|
-        h[key.gsub(/(.)([A-Z])/,'\1_\2').downcase] = value
-        h
-      end
+      cmd('TS.INFO', key).then(&Info.method(:parse))
     end
+    def_delegators :info, *Info.members
+    def_delegator :info, :total_samples, :count
+    def_delegator :info, :total_samples, :size
 
     def labels=(val)
       @labels = val
-      cmd 'TS.ALTER', key, 'LABELS', labels.to_a.flatten
+      cmd 'TS.ALTER', key, 'LABELS', @labels.to_a.flatten
     end
 
     def madd(*values)
