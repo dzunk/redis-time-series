@@ -14,7 +14,7 @@ Redis.current.flushall
 
 @series = [@ts1, @ts2, @ts3]
 @series.each do |ts|
-  3.times { ts.increment }
+  3.times { ts.increment; sleep 0.01 }
 end
 
 Pry.start

@@ -52,12 +52,12 @@ RSpec.describe Redis::TimeSeries do
 
       specify do
         expect { create }.to issue_command "TS.CREATE #{key} LABELS foo bar baz 1 plugh true"
-        expect(ts.info['labels']).to eq [
+        expect(ts.labels).to eq(
+          'foo' => 'bar',
           # TODO: cast values
-          ['foo', 'bar'],
-          ['baz', '1'],
-          ['plugh', 'true']
-        ]
+          'baz' => '1',
+          'plugh' => 'true'
+        )
       end
     end
 
@@ -88,7 +88,7 @@ RSpec.describe Redis::TimeSeries do
       specify do
         expect { ts.labels = { foo: 'bar' } }.to issue_command \
           "TS.ALTER #{key} LABELS foo bar"
-        expect(ts.info['labels']).to eq [['foo', 'bar']]
+        expect(ts.labels).to eq('foo' => 'bar')
       end
     end
   end
@@ -240,21 +240,41 @@ RSpec.describe Redis::TimeSeries do
 
     specify { expect { info }.to issue_command "TS.INFO #{key}" }
 
-    it 'returns an info hash' do
-      expect(info).to eq(
+    it 'returns an info struct' do
+      expect(info).to be_a Redis::TimeSeries::Info
+      expect(info.to_h).to eq(
         {
-          'total_samples' => 0,
-          'memory_usage' => 4184,
-          'first_timestamp' => 0,
-          'last_timestamp' => 0,
-          'retention_time' => 0,
-          'chunk_count' => 1,
-          'max_samples_per_chunk' => 256,
-          'labels' => [],
-          'source_key' => nil,
-          'rules' => []
+          total_samples: 0,
+          memory_usage: 4184,
+          first_timestamp: 0,
+          last_timestamp: 0,
+          retention_time: 0,
+          chunk_count: 1,
+          max_samples_per_chunk: 256,
+          labels: {},
+          source_key: nil,
+          rules: []
         }
       )
+    end
+
+    Redis::TimeSeries::Info.members.each do |member|
+      it "delegates ##{member} to #info" do
+        expect(ts).to respond_to member
+        expect(ts.public_send(member)).to eq ts.info.public_send(member)
+      end
+    end
+
+    it 'delegates #total_samples as #count' do
+      expect(ts.count).to eq ts.info.total_samples
+    end
+
+    it 'delegates #total_samples as #length' do
+      expect(ts.length).to eq ts.info.total_samples
+    end
+
+    it 'delegates #total_samples as #size' do
+      expect(ts.size).to eq ts.info.total_samples
     end
   end
 

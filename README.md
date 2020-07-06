@@ -133,16 +133,31 @@ ts.range from: 10.minutes.ago, to: Time.current # Time range as keyword args
 Get info about the series
 ```ruby
 ts.info
-=> {"total_samples"=>3,
- "memory_usage"=>4184,
- "first_timestamp"=>1593155422582,
- "last_timestamp"=>1593155709333,
- "retention_time"=>0,
- "chunk_count"=>1,
- "max_samples_per_chunk"=>256,
- "labels"=>[],
- "source_key"=>nil,
- "rules"=>[]}
+=> #<struct Redis::TimeSeries::Info
+ total_samples=3,
+ memory_usage=4184,
+ first_timestamp=1594060993011,
+ last_timestamp=1594060993060,
+ retention_time=0,
+ chunk_count=1,
+ max_samples_per_chunk=256,
+ labels={"foo"=>"bar"},
+ source_key=nil,
+ rules=[]>
+# Each info property is also a method on the time series object
+ts.memory_usage
+=> 4208
+ts.labels
+=> {"foo"=>"bar"}
+ts.total_samples
+=> 3
+# Total samples also available as #count, #length, and #size
+ts.count
+=> 3
+ts.length
+=> 3
+ts.size
+=> 3
 ```
 
 ### TODO
