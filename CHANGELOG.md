@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+* Converted `#info` to a struct instead of a hash.
+* Added methods on time series for getting info attributes.
+
 ## 0.1.1
 Fix setting labels on `TS.CREATE` and `TS.ALTER`
 
