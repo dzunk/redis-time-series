@@ -97,8 +97,7 @@ class Redis
       cmd('TS.INFO', key).then(&Info.method(:parse))
     end
     def_delegators :info, *Info.members
-    def_delegator :info, :total_samples, :count
-    def_delegator :info, :total_samples, :size
+    %i[count length size].each { |m| def_delegator :info, :total_samples, m }
 
     def labels=(val)
       @labels = val

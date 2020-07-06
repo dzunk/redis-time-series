@@ -269,6 +269,10 @@ RSpec.describe Redis::TimeSeries do
       expect(ts.count).to eq ts.info.total_samples
     end
 
+    it 'delegates #total_samples as #length' do
+      expect(ts.length).to eq ts.info.total_samples
+    end
+
     it 'delegates #total_samples as #size' do
       expect(ts.size).to eq ts.info.total_samples
     end
