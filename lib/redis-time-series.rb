@@ -6,5 +6,5 @@ require 'redis/time_series'
 require 'redis/time_series/sample'
 
 class RedisTimeSeries
-  VERSION = '0.1.1'
+  VERSION = '0.2.0'
 end

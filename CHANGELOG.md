@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.2.0
 * Converted `#info` to a struct instead of a hash.
 * Added methods on time series for getting info attributes.
 
