@@ -1,4 +1,5 @@
-![](https://github.com/dzunk/redis-time-series/workflows/RSpec/badge.svg)
+[![RSpec](https://github.com/dzunk/redis-time-series/workflows/RSpec/badge.svg)](https://github.com/dzunk/redis-time-series/actions?query=workflow%3ARSpec+branch%3Amaster)
+[![Gem Version](https://badge.fury.io/rb/redis-time-series.svg)](https://badge.fury.io/rb/redis-time-series)
 
 # RedisTimeSeries
 
