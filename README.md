@@ -160,11 +160,23 @@ ts.length
 ts.size
 => 3
 ```
+Find series matching specific label(s)
+```ruby
+Redis::TimeSeries.queryindex('foo=bar')
+=> [#<Redis::TimeSeries:0x00007fc115ba1610
+  @key="ts3",
+  @redis=#<Redis client v4.2.1 for redis://127.0.0.1:6379/0>,
+  @retention=nil,
+  @uncompressed=false>]
+# Note that you need at least one "label equals value" filter
+Redis::TimeSeries.queryindex('foo!=bar')
+=> RuntimeError: Filtering requires at least one equality comparison
+```
+
 
 ### TODO
 * `TS.REVRANGE`
 * `TS.MRANGE`/`TS.MREVRANGE`
-* `TS.QUERYINDEX`
 * Compaction rules
 * Filters
 * Probably a bunch more stuff

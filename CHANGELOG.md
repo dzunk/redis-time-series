@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Added `TS.QUERYINDEX` command
 
 ## 0.2.0
 * Converted `#info` to a struct instead of a hash.
