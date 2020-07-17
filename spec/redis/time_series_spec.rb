@@ -278,5 +278,40 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  describe 'TS.QUERYINDEX'
+  describe 'TS.QUERYINDEX' do
+    subject(:result) { described_class.queryindex(filters) }
+
+    let(:filters) { 'foo=bar' }
+
+    before do
+      described_class.create('good', labels: { foo: 'bar' })
+      described_class.create('bad', labels: { baz: 'quux' })
+    end
+
+    after do
+      Redis.current.del 'good'
+      Redis.current.del 'bad'
+    end
+
+    specify { expect { result }.to issue_command 'TS.QUERYINDEX foo=bar' }
+
+    it 'requires filters' do
+      expect { described_class.queryindex }.to raise_error ArgumentError
+    end
+
+    context 'with invalid filters' do
+      let(:filters) { 'foo!=bar' }
+
+      it 'raises an error' do
+        # TODO: custom error class
+        expect { result }.to raise_error RuntimeError
+      end
+    end
+
+    it 'returns matching time series' do
+      expect(result.size).to eq 1
+      expect(result.first).to be_a described_class
+      expect(result.first.key).to eq 'good'
+    end
+  end
 end

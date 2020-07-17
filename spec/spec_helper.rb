@@ -15,6 +15,8 @@ RSpec.configure do |config|
   end
 
   config.include ActiveSupport::Testing::TimeHelpers
+
+  config.before(:suite) { Redis.current.flushdb }
 end
 
 RSpec::Matchers.define :issue_command do |expected|
