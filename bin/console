@@ -6,15 +6,9 @@ require 'pry'
 require 'redis'
 require 'redis-time-series'
 
-Redis.current.flushall
-
-@ts1 = Redis::TimeSeries.create('foo')
-@ts2 = Redis::TimeSeries.create('bar')
-@ts3 = Redis::TimeSeries.create('baz')
-
+@ts1 = Redis::TimeSeries.new('ts1')
+@ts2 = Redis::TimeSeries.new('ts2')
+@ts3 = Redis::TimeSeries.new('ts3')
 @series = [@ts1, @ts2, @ts3]
-@series.each do |ts|
-  3.times { ts.increment; sleep 0.01 }
-end
 
 Pry.start

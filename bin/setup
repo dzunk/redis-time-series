@@ -1,8 +1,30 @@
-#!/usr/bin/env bash
-set -euo pipefail
-IFS=$'\n\t'
-set -vx
+#!/usr/bin/env ruby
 
-bundle install
+system 'bundle install'
+system 'docker pull redislabs/redistimeseries:latest'
+container_id = `docker run -p 6379:6379 -dit --rm redislabs/redistimeseries`
 
-# Do any other automated setup that you need to do here
+require 'bundler/setup'
+require 'active_support/core_ext/numeric/time'
+require 'redis'
+
+Redis.current.flushall
+ts1 = Redis::TimeSeries.create('ts1')
+ts2 = Redis::TimeSeries.create('ts2')
+ts3 = Redis::TimeSeries.create('ts3')
+
+ts1.add 12, 6.minutes.ago
+ts1.add 34, 4.minutes.ago
+ts1.add 56, 2.minutes.ago
+
+10.times { ts2.increment; sleep 0.01 }
+
+ts3.labels = { foo: 'bar' }
+ts3.add 1
+sleep 0.01
+ts3.incrby 2
+sleep 0.01
+ts3.decrement
+
+at_exit { system "docker stop #{container_id}" }
+system "docker logs -f #{container_id}"

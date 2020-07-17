@@ -171,24 +171,26 @@ ts.size
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup`. You need the `docker` daemon installed and running. This script will:
+* Install gem dependencies
+* Pull the latest `redislabs/redistimeseries` image
+* Start a Redis server on port 6379
+* Seed three time series with some sample data
+* Attach to the running server and print logs to `STDOUT`
 
-In order to run the specs or use the console, you'll need a Redis server running on the default port 6379 with the RedisTimeSeries module enabled. The easiest way to do so is by running the Docker image:
-```
-docker run -p 6379:6379 -it --rm redislabs/redistimeseries
-```
-
-The `bin/console` script will set up three time series, `@ts1`, `@ts2`, and `@ts3`, with three values in each. **It will also flush the local Redis server each time you run it**, so don't try it if you have data you don't want to lose!
+With the above script running, or after starting a server manually, you can run `bin/console` to interact with it. The three series are named `ts1`, `ts2`, and `ts3`, and are available as instance variables in the console.
 
 If you want to see the commands being executed, run the console with `DEBUG=true bin/console` and it will output the raw command strings as they're executed.
 ```ruby
 [1] pry(main)> @ts1.increment
-DEBUG: TS.INCRBY foo 1
+DEBUG: TS.INCRBY ts1 1
 => 1593159795467
 [2] pry(main)> @ts1.get
-DEBUG: TS.GET foo
+DEBUG: TS.GET ts1
 => #<Redis::TimeSeries::Sample:0x00007f8e1a190cf8 @time=2020-06-26 01:23:15 -0700, @value=0.4e1>
 ```
+
+Use `rake spec` to run the test suite.
 
 ## Contributing
 
