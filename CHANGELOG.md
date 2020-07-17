@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.3.0
 * Added `TS.QUERYINDEX` command
 
 ## 0.2.0
