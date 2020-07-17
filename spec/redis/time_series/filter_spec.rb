@@ -91,4 +91,10 @@ RSpec.describe Redis::TimeSeries::Filter do
       end
     end
   end
+
+  describe '#to_a' do
+    it 'returns the parsed filters as an array of strings' do
+      expect(filter.to_a).to match_array filter_string.split(' ')
+    end
+  end
 end

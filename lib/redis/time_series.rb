@@ -33,6 +33,12 @@ class Redis
         end
       end
 
+      def queryindex(filter_value)
+        filters = Filter.new(filter_value)
+        filters.validate!
+        redis.call('TS.QUERYINDEX', *filters.to_a).map { |key| new(key) }
+      end
+
       def redis
         @redis ||= Redis.current
       end

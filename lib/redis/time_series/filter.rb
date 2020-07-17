@@ -100,8 +100,8 @@ class Redis
         !!filters.find { |f| f.is_a? Equal }
       end
 
-      def to_s
-        filters.map(&:to_s).join(' ')
+      def to_a
+        filters.map(&:to_s)
       end
 
       private
