@@ -171,14 +171,58 @@ Redis::TimeSeries.queryindex('foo=bar')
 # Note that you need at least one "label equals value" filter
 Redis::TimeSeries.queryindex('foo!=bar')
 => RuntimeError: Filtering requires at least one equality comparison
+# queryindex is also aliased as .where for fluency
+Redis::TimeSeries.where('foo=bar')
+=> [#<Redis::TimeSeries:0x00007fb8981010c8
+  @key="ts3",
+  @redis=#<Redis client v4.2.1 for redis://127.0.0.1:6379/0>,
+  @retention=nil,
+  @uncompressed=false>]
 ```
+### Filter DSL
+You can provide filter strings directly, per the time series documentation.
+```ruby
+Redis::TimeSeries.where('foo=bar')
+=> [#<Redis::TimeSeries:0x00007fb8981010c8...>]
+```
+There is also a hash-based syntax available, which may be more pleasant to work with.
+```ruby
+Redis::TimeSeries.where(foo: 'bar')
+=> [#<Redis::TimeSeries:0x00007fb89811dca0...>]
+```
+All six filter types are represented in hash format below.
+```ruby
+{
+  foo: 'bar',          # label=value  (equality)
+  foo: { not: 'bar' }, # label!=value (inequality)
+  foo: true,           # label=       (presence)
+  foo: false,          # label!=      (absence)
+  foo: [1, 2],         # label=(1,2)  (any value)
+  foo: { not: [1, 2] } # label!=(1,2) (no values)
+}
+```
+Note the special use of `true` and `false`. If you're representing a boolean value with a label, rather than setting its value to "true" or "false" (which would be treated as strings in Redis anyway), you should add or remove the label from the series.
 
+Values can be any object that responds to `.to_s`:
+```ruby
+class Person
+  def initialize(name)
+    @name = name
+  end
+
+  def to_s
+    @name
+  end
+end
+
+Redis::TimeSeries.where(person: Person.new('John'))
+#=> TS.QUERYINDEX person=John
+```
 
 ### TODO
 * `TS.REVRANGE`
 * `TS.MRANGE`/`TS.MREVRANGE`
 * Compaction rules
-* Filters
 * Probably a bunch more stuff
 
 ## Development

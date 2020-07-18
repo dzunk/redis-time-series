@@ -80,7 +80,7 @@ class Redis
         end
 
         def to_s
-          "#{label}=(#{values.join(',')})"
+          "#{label}=(#{values.map(&:to_s).join(',')})"
         end
       end
 
@@ -98,7 +98,7 @@ class Redis
         end
 
         def to_s
-          "#{label}!=(#{values.join(',')})"
+          "#{label}!=(#{values.map(&:to_s).join(',')})"
         end
       end
 
