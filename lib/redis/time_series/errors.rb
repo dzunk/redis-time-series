@@ -7,9 +7,9 @@ class Redis
     # one equality comparison ("foo=bar")
     class InvalidFilters < Error; end
 
-    # Invalid aggregation type error is raised when attempting to create an
-    # aggreation with an unknown type.
-    # @see Redis::TimeSeries::Aggregation::TYPES
-    class InvalidAggregation < Error; end
+    # Aggregation error is raised when attempting to create anaggreation with
+    # an unknown type, or when calling a command with an invalid aggregation value.
+    # @see Redis::TimeSeries::Aggregation
+    class AggregationError < Error; end
   end
 end
