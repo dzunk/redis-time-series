@@ -1,6 +1,6 @@
 require 'bigdecimal'
 require 'forwardable'
-require 'time/msec'
+require 'ext/time_msec'
 require 'redis/time_series/errors'
 require 'redis/time_series/filters'
 require 'redis/time_series/info'
