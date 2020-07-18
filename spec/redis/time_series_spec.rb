@@ -303,8 +303,7 @@ RSpec.describe Redis::TimeSeries do
       let(:filters) { 'foo!=bar' }
 
       it 'raises an error' do
-        # TODO: custom error class
-        expect { result }.to raise_error RuntimeError
+        expect { result }.to raise_error Redis::TimeSeries::InvalidFilters
       end
     end
 
