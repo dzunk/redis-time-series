@@ -10,6 +10,27 @@ class Redis
         new(key, **options).create(labels: options[:labels])
       end
 
+      def create_rule(source:, dest:, aggregation:)
+        args = [
+          source.is_a?(self) ? source.key : source.to_s,
+          dest.is_a?(self) ? dest.key : dest.to_s,
+          Aggregation.parse(aggregation).to_a
+        ]
+        redis.call 'TS.CREATERULE', *args.flatten
+      end
+
+      def delete_rule(source:, dest:)
+        args = [
+          source.is_a?(self) ? source.key : source.to_s,
+          dest.is_a?(self) ? dest.key : dest.to_s
+        ]
+        redis.call 'TS.DELETERULE', *args
+      end
+
+      def destroy(key)
+        redis.del key
+      end
+
       def madd(data)
         data.reduce([]) do |memo, (key, value)|
           if value.is_a?(Hash) || (value.is_a?(Array) && value.first.is_a?(Array))
@@ -74,6 +95,14 @@ class Redis
       args << ['LABELS', labels.to_a] if labels&.any?
       cmd 'TS.CREATE', args.flatten
       self
+    end
+
+    def create_rule(dest:, aggregation:)
+      self.class.create_rule(source: self, dest: dest, aggregation: aggregation)
+    end
+
+    def delete_rule(dest:)
+      self.class.delete_rule(source: self, dest: dest)
     end
 
     def decrby(value = 1, timestamp = nil)

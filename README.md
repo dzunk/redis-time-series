@@ -219,10 +219,35 @@ Redis::TimeSeries.where(person: Person.new('John'))
 #=> TS.QUERYINDEX person=John
 ```
 
+### Compaction Rules
+Add a compaction rule to a series.
+```ruby
+# `dest` needs to be created before the rule is added.
+other_ts = Redis::TimeSeries.create('other_ts')
+
+# Note: aggregation durations are measured in milliseconds
+ts.create_rule(dest: other_ts, aggregation: [:count, 6000])
+
+# Can also provide a string key instead of a time series object
+ts.create_rule(dest: 'other_ts', aggregation: [:avg, 120000])
+
+# Can also provide an Aggregation object instead of an array
+agg = Redis::TimeSeries::Aggregation.new(:avg, 120000)
+ts.create_rule(dest: other_ts, aggregation: agg)
+
+# Class-level method also available
+Redis::TimeSeries.create_rule(source: ts, dest: other_ts, aggregation: ['std.p', 150000])
+```
+Remove an existing compaction rule
+```ruby
+ts.delete_rule(dest: 'other_ts')
+Redis::TimeSeries.delete_rule(source: ts, dest: 'other_ts')
+```
+
+
 ### TODO
 * `TS.REVRANGE`
 * `TS.MRANGE`/`TS.MREVRANGE`
-* Compaction rules
 * Probably a bunch more stuff
 
 ## Development
