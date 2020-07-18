@@ -4,15 +4,42 @@ require 'spec_helper'
 RSpec.describe Redis::TimeSeries::Filters do
   subject(:filters) { described_class.new(value) }
 
-  let(:value) { 'foo=bar baz!=quux plugh= xyzzy!= zork=(grue,cyclops) barrow!=(wizard,frobozz)' }
+  let(:value) { string_value }
+  let(:string_value) { 'foo=bar baz!=quux plugh= xyzzy!= zork=(grue,cyclops) barrow!=(wizard,frobozz)' }
+  let(:hash_value) do
+    {
+      foo: 'bar',
+      baz: { not: 'quux' },
+      plugh: false,
+      xyzzy: true,
+      zork: ['grue', 'cyclops'],
+      barrow: { not: ['wizard', 'frobozz'] }
+    }
+  end
 
   shared_examples 'parsing and serialization' do |expected_string|
-    it 'correctly parses' do
-      expect(filters.size).to eq 1
+    context 'with a string' do
+      let(:value) { string_value }
+
+      it 'correctly parses' do
+        expect(filters.size).to eq 1
+      end
+
+      it 'correctly serializes' do
+        expect(filters.map(&:to_s)).to contain_exactly expected_string
+      end
     end
 
-    it 'correctly serializes' do
-      expect(filters.map(&:to_s)).to contain_exactly expected_string
+    context 'with a hash' do
+      let(:value) { hash_value }
+
+      it 'correctly parses' do
+        expect(filters.size).to eq 1
+      end
+
+      it 'correctly serializes' do
+        expect(filters.map(&:to_s)).to contain_exactly expected_string
+      end
     end
   end
 
