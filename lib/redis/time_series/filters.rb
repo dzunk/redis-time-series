@@ -9,6 +9,10 @@ class Redis
           new(*str.split('='))
         end
 
+        def to_h
+          { label => value }
+        end
+
         def to_s
           "#{label}=#{value}"
         end
@@ -19,6 +23,10 @@ class Redis
 
         def self.parse(str)
           new(*str.split('!='))
+        end
+
+        def to_h
+          { label => { not: value } }
         end
 
         def to_s
@@ -33,6 +41,10 @@ class Redis
           new(str.delete('='))
         end
 
+        def to_h
+          { label => false }
+        end
+
         def to_s
           "#{label}="
         end
@@ -43,6 +55,10 @@ class Redis
 
         def self.parse(str)
           new(str.delete('!='))
+        end
+
+        def to_h
+          { label => true }
         end
 
         def to_s
@@ -59,6 +75,10 @@ class Redis
           new(label, values)
         end
 
+        def to_h
+          { label => values }
+        end
+
         def to_s
           "#{label}=(#{values.join(',')})"
         end
@@ -71,6 +91,10 @@ class Redis
           label, values = str.split('!=')
           values = values.tr('()', '').split(',')
           new(label, values)
+        end
+
+        def to_h
+          { label => { not: values } }
         end
 
         def to_s
@@ -88,11 +112,10 @@ class Redis
       attr_reader :filters
 
       def initialize(filters = nil)
-        #return @filters = parse_string(filters) || {}
         @filters = case filters
                    when String then parse_string(filters)
                    when Hash then parse_hash(filters)
-                   else {}
+                   else []
                    end
       end
 
@@ -106,6 +129,14 @@ class Redis
 
       def to_a
         filters.map(&:to_s)
+      end
+
+      def to_h
+        filters.reduce({}) { |h, filter| h.merge(filter.to_h) }
+      end
+
+      def to_s
+        to_a.join(' ')
       end
 
       private

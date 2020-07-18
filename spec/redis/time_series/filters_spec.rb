@@ -124,4 +124,20 @@ RSpec.describe Redis::TimeSeries::Filters do
       expect(filters.to_a).to match_array value.split(' ')
     end
   end
+
+  describe '#to_h' do
+    let(:value) { string_value }
+
+    it 'returns the parsed filters as a hash' do
+      expect(filters.to_h).to eq hash_value.transform_keys(&:to_s)
+    end
+  end
+
+  describe '#to_s' do
+    let(:value) { hash_value }
+
+    it 'returns the parsed filters as a single string' do
+      expect(filters.to_s).to eq string_value
+    end
+  end
 end
