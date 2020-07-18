@@ -34,10 +34,12 @@ class Redis
       end
 
       def queryindex(filter_value)
-        filters = Filter.new(filter_value)
+        filters = Filters.new(filter_value)
         filters.validate!
+        puts "DEBUG: TS.QUERYINDEX #{filters.to_a.join(' ')}" if ENV['DEBUG']
         redis.call('TS.QUERYINDEX', *filters.to_a).map { |key| new(key) }
       end
+      alias where queryindex
 
       def redis
         @redis ||= Redis.current

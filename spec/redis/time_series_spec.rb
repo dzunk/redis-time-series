@@ -303,15 +303,28 @@ RSpec.describe Redis::TimeSeries do
       let(:filters) { 'foo!=bar' }
 
       it 'raises an error' do
-        # TODO: custom error class
-        expect { result }.to raise_error RuntimeError
+        expect { result }.to raise_error Redis::TimeSeries::InvalidFilters
       end
     end
 
-    it 'returns matching time series' do
-      expect(result.size).to eq 1
-      expect(result.first).to be_a described_class
-      expect(result.first.key).to eq 'good'
+    context 'with a hash of filters' do
+      let(:filters) { { foo: 'bar' } }
+
+      it 'returns matching time series' do
+        expect(result.size).to eq 1
+        expect(result.first).to be_a described_class
+        expect(result.first.key).to eq 'good'
+      end
+    end
+
+    context 'with a filter string' do
+      let(:filters) { 'foo=bar' }
+
+      it 'returns matching time series' do
+        expect(result.size).to eq 1
+        expect(result.first).to be_a described_class
+        expect(result.first.key).to eq 'good'
+      end
     end
   end
 end
