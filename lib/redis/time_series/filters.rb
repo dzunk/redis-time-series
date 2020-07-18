@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Redis
   class TimeSeries
-    class Filter
+    class Filters
       Equal = Struct.new(:label, :value) do
         self::REGEX = /^[^!]+=[^(]+/
 
@@ -80,7 +80,7 @@ class Redis
 
       TYPES = [Equal, NotEqual, Absent, Present, AnyValue, NoValues]
       TYPES.each do |type|
-        define_method "#{type.to_s.split('::').last.gsub(/(.)([A-Z])/,'\1_\2').downcase}_filters" do
+        define_method "#{type.to_s.split('::').last.gsub(/(.)([A-Z])/,'\1_\2').downcase}" do
           filters.select { |f| f.is_a? type }
         end
       end
@@ -88,8 +88,12 @@ class Redis
       attr_reader :filters
 
       def initialize(filters = nil)
-        filters = parse_string(filters) if filters.is_a?(String)
-        @filters = filters.presence || {}
+        #return @filters = parse_string(filters) || {}
+        @filters = case filters
+                   when String then parse_string(filters)
+                   when Hash then parse_hash(filters)
+                   else {}
+                   end
       end
 
       def validate!
@@ -107,10 +111,26 @@ class Redis
       private
 
       def parse_string(filter_string)
+        return unless filter_string.is_a? String
         filter_string.split(' ').map do |str|
           match = TYPES.find { |f| f::REGEX.match? str }
           raise "Unable to parse '#{str}'" unless match
           match.parse(str)
+        end
+      end
+
+      def parse_hash(filter_hash)
+        return unless filter_hash.is_a? Hash
+        filter_hash.map do |label, value|
+          case value
+          when TrueClass then Present.new(label)
+          when FalseClass then Absent.new(label)
+          when Array then AnyValue.new(label, value)
+          when Hash
+            raise 'Invalid filter hash value' unless value.keys === [:not]
+            (v = value.values.first).is_a?(Array) ? NoValues.new(label, v) : NotEqual.new(label, v)
+          else Equal.new(label, value)
+          end
         end
       end
     end
