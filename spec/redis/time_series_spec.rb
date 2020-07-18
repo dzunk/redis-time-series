@@ -189,7 +189,24 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  describe 'TS.CREATERULE'
+  describe 'TS.CREATERULE' do
+    describe 'class-level' do
+      specify do
+        expect do
+          described_class.create_rule source: ts.key, dest: 'rule_test', aggregation: { count: 60 }
+        end.to issue_command "TS.CREATERULE #{ts.key} rule_test AGGREGATION count 60"
+      end
+    end
+
+    describe 'instance-level' do
+      specify do
+        expect do
+          ts.create_rule dest: 'rule_test', aggregation: { avg: 120 }
+        end.to issue_command "TS.CREATERULE #{ts.key} rule_test AGGREGATION avg 120"
+      end
+    end
+  end
+
   describe 'TS.DELETERULE'
 
   describe 'TS.RANGE' do
