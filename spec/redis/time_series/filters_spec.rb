@@ -113,7 +113,7 @@ RSpec.describe Redis::TimeSeries::Filters do
       let(:value) { nil }
 
       it 'raises an error' do
-        expect { filters.validate! }.to raise_error Redis::TimeSeries::InvalidFilters
+        expect { filters.validate! }.to raise_error Redis::TimeSeries::FilterError
       end
     end
   end
@@ -144,13 +144,13 @@ RSpec.describe Redis::TimeSeries::Filters do
     context 'when given an invalid filter string' do
       let(:value) { 'foo' }
 
-      specify { expect { filters }.to raise_error Redis::TimeSeries::InvalidFilters }
+      specify { expect { filters }.to raise_error Redis::TimeSeries::FilterError }
     end
 
     context 'when given an invalid hash value' do
       let(:value) { { foo: { bar: 'baz' } } }
 
-      specify { expect { filters }.to raise_error Redis::TimeSeries::InvalidFilters }
+      specify { expect { filters }.to raise_error Redis::TimeSeries::FilterError }
     end
   end
 end

@@ -5,7 +5,7 @@ class Redis
 
     # Invalid filter error is raised when attempting to filter without at least
     # one equality comparison ("foo=bar")
-    class InvalidFilters < Error; end
+    class FilterError < Error; end
 
     # Aggregation error is raised when attempting to create anaggreation with
     # an unknown type, or when calling a command with an invalid aggregation value.

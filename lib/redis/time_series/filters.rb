@@ -120,7 +120,7 @@ class Redis
       end
 
       def validate!
-        valid? || raise(InvalidFilters, 'Filtering requires at least one equality comparison')
+        valid? || raise(FilterError, 'Filtering requires at least one equality comparison')
       end
 
       def valid?
@@ -145,7 +145,7 @@ class Redis
         return unless filter_string.is_a? String
         filter_string.split(' ').map do |str|
           match = TYPES.find { |f| f::REGEX.match? str }
-          raise(InvalidFilters, "Unable to parse '#{str}'") unless match
+          raise(FilterError, "Unable to parse '#{str}'") unless match
           match.parse(str)
         end
       end
@@ -158,7 +158,7 @@ class Redis
           when FalseClass then Absent.new(label)
           when Array then AnyValue.new(label, value)
           when Hash
-            raise(InvalidFilters, "Invalid filter hash value #{value}") unless value.keys === [:not]
+            raise(FilterError, "Invalid filter hash value #{value}") unless value.keys === [:not]
             (v = value.values.first).is_a?(Array) ? NoValues.new(label, v) : NotEqual.new(label, v)
           else Equal.new(label, value)
           end

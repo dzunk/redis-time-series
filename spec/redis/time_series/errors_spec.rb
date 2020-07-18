@@ -12,7 +12,15 @@ RSpec.describe 'Errors' do
     it { is_expected.to be_a StandardError }
   end
 
-  describe Redis::TimeSeries::InvalidFilters do
+  describe Redis::TimeSeries::FilterError do
+    it 'exists' do
+      expect(described_class).to be
+    end
+
+    it { is_expected.to be_a base_error_class }
+  end
+
+  describe Redis::TimeSeries::AggregationError do
     it 'exists' do
       expect(described_class).to be
     end

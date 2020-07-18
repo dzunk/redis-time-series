@@ -5,6 +5,7 @@
 * Removed `Time#ts_msec` monkey-patch
 * Renamed `TimeSeries.queryindex` to `.query_index`
 * Added `TS.CREATERULE` and `TS.DELETERULE` commands
+* Renamed `InvalidFilters` to `FilterError`
 
 ## 0.3.0
 * Added `TS.QUERYINDEX` command
