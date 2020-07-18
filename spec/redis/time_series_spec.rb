@@ -279,7 +279,7 @@ RSpec.describe Redis::TimeSeries do
   end
 
   describe 'TS.QUERYINDEX' do
-    subject(:result) { described_class.queryindex(filters) }
+    subject(:result) { described_class.query_index(filters) }
 
     let(:filters) { 'foo=bar' }
 
@@ -296,7 +296,7 @@ RSpec.describe Redis::TimeSeries do
     specify { expect { result }.to issue_command 'TS.QUERYINDEX foo=bar' }
 
     it 'requires filters' do
-      expect { described_class.queryindex }.to raise_error ArgumentError
+      expect { described_class.query_index }.to raise_error ArgumentError
     end
 
     context 'with invalid filters' do

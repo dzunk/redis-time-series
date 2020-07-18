@@ -3,6 +3,7 @@
 ## Unreleased
 * Added [hash-based filter DSL](https://github.com/dzunk/redis-time-series/tree/7173c73588da50614c02f9c89bf2ecef77766a78#filter-dsl)
 * Removed `Time#ts_msec` monkey-patch
+* Renamed `TimeSeries.queryindex` to `.query_index`
 
 ## 0.3.0
 * Added `TS.QUERYINDEX` command
