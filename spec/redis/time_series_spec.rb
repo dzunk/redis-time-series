@@ -190,24 +190,53 @@ RSpec.describe Redis::TimeSeries do
   end
 
   describe 'TS.CREATERULE' do
+    let(:dest_key) { 'test_ts_createrule' }
+
+    before { described_class.create dest_key }
+    after { described_class.destroy dest_key }
+
     describe 'class-level' do
       specify do
         expect do
-          described_class.create_rule source: ts.key, dest: 'rule_test', aggregation: { count: 60 }
-        end.to issue_command "TS.CREATERULE #{ts.key} rule_test AGGREGATION count 60"
+          described_class.create_rule source: ts.key, dest: dest_key, aggregation: [:count, 60]
+        end.to issue_command "TS.CREATERULE #{ts.key} #{dest_key} AGGREGATION count 60"
       end
     end
 
     describe 'instance-level' do
       specify do
         expect do
-          ts.create_rule dest: 'rule_test', aggregation: { avg: 120 }
-        end.to issue_command "TS.CREATERULE #{ts.key} rule_test AGGREGATION avg 120"
+          ts.create_rule dest: dest_key, aggregation: [:avg, 120]
+        end.to issue_command "TS.CREATERULE #{ts.key} #{dest_key} AGGREGATION avg 120"
       end
     end
   end
 
-  describe 'TS.DELETERULE'
+  describe 'TS.DELETERULE' do
+    let(:dest_key) { 'test_ts_deleterule' }
+
+    before do
+      dest = described_class.create dest_key
+      ts.create_rule dest: dest, aggregation: [:avg, 120000]
+    end
+    after { described_class.destroy dest_key }
+
+    describe 'class-level' do
+      specify do
+        expect do
+          described_class.delete_rule source: ts.key, dest: dest_key
+        end.to issue_command "TS.DELETERULE #{ts.key} #{dest_key}"
+      end
+    end
+
+    describe 'instance-level' do
+      specify do
+        expect do
+          ts.delete_rule dest: dest_key
+        end.to issue_command "TS.DELETERULE #{ts.key} #{dest_key}"
+      end
+    end
+  end
 
   describe 'TS.RANGE' do
     specify do

@@ -10,6 +10,6 @@ class Redis
     # Invalid aggregation type error is raised when attempting to create an
     # aggreation with an unknown type.
     # @see Redis::TimeSeries::Aggregation::TYPES
-    class InvalidAggregationType < Error; end
+    class InvalidAggregation < Error; end
   end
 end
