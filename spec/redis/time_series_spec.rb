@@ -4,8 +4,8 @@ RSpec.describe Redis::TimeSeries do
 
   let(:key) { 'time_series_test' }
   let(:time) { 1591339859 }
-  let(:from) { time }
-  let(:to) { time + 120 }
+  let(:from) { Time.at(time) }
+  let(:to) { Time.at(time) + 120 }
 
   after { Redis.current.del key }
 
@@ -256,7 +256,17 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
-    context 'with an aggregation' # TODO
+    context 'with an aggregation' do
+      specify do
+        expect { ts.range from..to, aggregation: [:avg, 60000] }.to issue_command \
+          "TS.RANGE #{key} #{msec from} #{msec to} AGGREGATION avg 60000"
+      end
+
+      it 'returns the aggregated results' do
+        ts.madd(2, 3, 4, 5, 6)
+        expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+      end
+    end
 
     it 'returns an array of Samples' do
       values = [2, 4, 6]

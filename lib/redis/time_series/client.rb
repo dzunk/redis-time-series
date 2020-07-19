@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+using TimeMsec
+
 class Redis
   class TimeSeries
     module Client

@@ -22,6 +22,12 @@ RSpec.describe Redis::TimeSeries::Aggregation do
       it { is_expected.to eq described_class.new(:min, 1234) }
     end
 
+    context 'given nil' do
+      let(:raw) { nil }
+
+      it { is_expected.to be_nil }
+    end
+
     context 'anything else' do
       let(:raw) { 'foo' }
 
@@ -38,6 +44,12 @@ RSpec.describe Redis::TimeSeries::Aggregation do
 
     context 'given an invalid type' do
       specify { expect { described_class.new('foo', 123) }.to raise_error Redis::TimeSeries::AggregationError }
+    end
+
+    context 'given an ActiveSupport::Duration' do
+      it 'converts it to milliseconds' do
+        expect(described_class.new(:avg, 15.minutes).duration).to eq 900000
+      end
     end
   end
 
