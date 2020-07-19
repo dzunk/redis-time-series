@@ -110,6 +110,10 @@ RSpec.describe Redis::TimeSeries do
       specify { expect { ts.add 'bar' }.to raise_error Redis::CommandError }
     end
 
+    context 'with uncompressed: true' do
+      specify { expect { ts.add 123, uncompressed: true }.to issue_command "TS.ADD #{key} * 123 UNCOMPRESSED" }
+    end
+
     it 'returns the added Sample' do
       s = ts.add 123
       expect(s).to be_a Redis::TimeSeries::Sample
@@ -179,6 +183,10 @@ RSpec.describe Redis::TimeSeries do
     context 'with a timestamp' do
       specify { expect { ts.incrby 1, time }.to issue_command "TS.INCRBY #{key} 1 #{time}" }
     end
+
+    context 'with uncompressed: true' do
+      specify { expect { ts.incrby 1, uncompressed: true }.to issue_command "TS.INCRBY #{key} 1 UNCOMPRESSED" }
+    end
   end
 
   describe 'TS.DECRBY' do
@@ -186,6 +194,10 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with a timestamp' do
       specify { expect { ts.decrby 1, time }.to issue_command "TS.DECRBY #{key} 1 #{time}" }
+    end
+
+    context 'with uncompressed: true' do
+      specify { expect { ts.decrby 1, uncompressed: true }.to issue_command "TS.DECRBY #{key} 1 UNCOMPRESSED" }
     end
   end
 
