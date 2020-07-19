@@ -16,13 +16,28 @@ jobs:
         image: redislabs/redistimeseries:latest
         ports:
           - 6379:6379/tcp
+    env:
+      CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      GIT_COMMIT_SHA: ${{ github.sha }}
+      GIT_BRANCH: ${{ github.head_ref }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.6
+    - name: Set up CodeClimate
+      run: |
+        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+        chmod +x ./cc-test-reporter
+        ./cc-test-reporter before-build
     - name: Install dependencies
       run: bundle install
     - name: Run specs
       run: bundle exec rake spec
+    - name: Upload coverage report
+      run: ./cc-test-reporter after-build -t simplecov coverage/.resultset.json
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: coverage/
