@@ -1,12 +1,12 @@
+require 'simplecov'
+SimpleCov.start { add_filter '/spec/' }
+
 require 'bundler/setup'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/testing/time_helpers'
 require 'pry'
 require 'redis'
 require 'redis-time-series'
-require 'simplecov'
-
-SimpleCov.start
 
 RSpec.configure do |config|
   config.disable_monkey_patching!
