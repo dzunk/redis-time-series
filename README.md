@@ -120,16 +120,28 @@ ts.get
 ```
 Get a range of values
 ```ruby
-ts.range 10.minutes.ago..Time.current # Time range as an argument
+# Time range as an argument
+ts.range(10.minutes.ago..Time.current)
 => [#<Redis::TimeSeries::Sample:0x00007fa25f13fc28 @time=2020-06-25 23:50:51 -0700, @value=0.57e2>,
- #<Redis::TimeSeries::Sample:0x00007fa25f13db58 @time=2020-06-25 23:50:55 -0700, @value=0.58e2>,
- #<Redis::TimeSeries::Sample:0x00007fa25f13d900 @time=2020-06-25 23:50:57 -0700, @value=0.57e2>,
- #<Redis::TimeSeries::Sample:0x00007fa25f13d680 @time=2020-06-25 23:51:30 -0700, @value=0.58e2>]
-ts.range from: 10.minutes.ago, to: Time.current # Time range as keyword args
+    #<Redis::TimeSeries::Sample:0x00007fa25f13db58 @time=2020-06-25 23:50:55 -0700, @value=0.58e2>,
+    #<Redis::TimeSeries::Sample:0x00007fa25f13d900 @time=2020-06-25 23:50:57 -0700, @value=0.57e2>,
+    #<Redis::TimeSeries::Sample:0x00007fa25f13d680 @time=2020-06-25 23:51:30 -0700, @value=0.58e2>]
+
+# Time range as keyword args
+ts.range(from: 10.minutes.ago, to: Time.current)
 => [#<Redis::TimeSeries::Sample:0x00007fa25dc01f00 @time=2020-06-25 23:50:51 -0700, @value=0.57e2>,
- #<Redis::TimeSeries::Sample:0x00007fa25dc01d20 @time=2020-06-25 23:50:55 -0700, @value=0.58e2>,
- #<Redis::TimeSeries::Sample:0x00007fa25dc01b68 @time=2020-06-25 23:50:57 -0700, @value=0.57e2>,
- #<Redis::TimeSeries::Sample:0x00007fa25dc019b0 @time=2020-06-25 23:51:30 -0700, @value=0.58e2>]
+    #<Redis::TimeSeries::Sample:0x00007fa25dc01d20 @time=2020-06-25 23:50:55 -0700, @value=0.58e2>,
+    #<Redis::TimeSeries::Sample:0x00007fa25dc01b68 @time=2020-06-25 23:50:57 -0700, @value=0.57e2>,
+    #<Redis::TimeSeries::Sample:0x00007fa25dc019b0 @time=2020-06-25 23:51:30 -0700, @value=0.58e2>]
+
+# Limit number of results with count argument
+ts.range(10.minutes.ago..Time.current, count: 2)
+=> [#<Redis::TimeSeries::Sample:0x00007fa25dc01f00 @time=2020-06-25 23:50:51 -0700, @value=0.57e2>,
+    #<Redis::TimeSeries::Sample:0x00007fa25dc01d20 @time=2020-06-25 23:50:55 -0700, @value=0.58e2>]
+
+# Apply aggregations to the range
+ts.range(from: 10.minutes.ago, to: Time.current, aggregation: [:avg, 10.minutes])
+=> [#<Redis::TimeSeries::Sample:0x00007fa25dc01f00 @time=2020-06-25 23:50:00 -0700, @value=0.575e2>]
 ```
 Get info about the series
 ```ruby
@@ -222,14 +234,18 @@ Redis::TimeSeries.where(person: Person.new('John'))
 ### Compaction Rules
 Add a compaction rule to a series.
 ```ruby
-# `dest` needs to be created before the rule is added.
+# Destintation time series needs to be created before the rule is added.
 other_ts = Redis::TimeSeries.create('other_ts')
 
-# Note: aggregation durations are measured in milliseconds
-ts.create_rule(dest: other_ts, aggregation: [:count, 6000])
+# Aggregation buckets are measured in milliseconds
+ts.create_rule(dest: other_ts, aggregation: [:count, 60000]) # 1 minute
 
-# Can also provide a string key instead of a time series object
+# Can provide a string key instead of a time series object
 ts.create_rule(dest: 'other_ts', aggregation: [:avg, 120000])
+
+# If you're using Rails or ActiveSupport, you can provide an
+# ActiveSupport::Duration instead of an integer
+ts.create_rule(dest: other_ts, aggregation: [:avg, 2.minutes])
 
 # Can also provide an Aggregation object instead of an array
 agg = Redis::TimeSeries::Aggregation.new(:avg, 120000)

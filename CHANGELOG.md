@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+* Fix aggregations for TS.RANGE command (#34)
+* Extract client handling into Client module (#32)
 
 ## 0.4.0
 * Added [hash-based filter DSL](https://github.com/dzunk/redis-time-series/tree/7173c73588da50614c02f9c89bf2ecef77766a78#filter-dsl)
