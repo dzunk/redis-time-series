@@ -18,7 +18,8 @@ jobs:
           - 6379:6379/tcp
     env:
       CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-      GIT_BRANCH: ${{ github.ref }}
+      GIT_COMMIT_SHA: ${{ github.sha }}
+      GIT_BRANCH: ${{ github.head_ref }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
