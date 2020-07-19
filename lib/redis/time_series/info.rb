@@ -15,8 +15,8 @@ class Redis
       :rules,
       keyword_init: true
     ) do
-      def self.parse(raw_array, series:)
-        raw_array.each_slice(2).reduce({}) do |h, (key, value)|
+      def self.parse(series:, data:)
+        data.each_slice(2).reduce({}) do |h, (key, value)|
           # Convert camelCase info keys to snake_case
           h[key.gsub(/(.)([A-Z])/,'\1_\2').downcase] = value
           h

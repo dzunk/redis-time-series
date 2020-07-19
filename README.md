@@ -157,16 +157,26 @@ Get info about the series
 ```ruby
 ts.info
 => #<struct Redis::TimeSeries::Info
+ series=
+  #<Redis::TimeSeries:0x00007ff46da9b578 @key="ts3", @redis=#<Redis client v4.2.1 for redis://127.0.0.1:6379/0>>,
  total_samples=3,
- memory_usage=4184,
- first_timestamp=1594060993011,
- last_timestamp=1594060993060,
+ memory_usage=4264,
+ first_timestamp=1595187993605,
+ last_timestamp=1595187993629,
  retention_time=0,
  chunk_count=1,
  max_samples_per_chunk=256,
  labels={"foo"=>"bar"},
  source_key=nil,
- rules=[]>
+ rules=
+  [#<Redis::TimeSeries::Rule:0x00007ff46db30c68
+    @aggregation=#<Redis::TimeSeries::Aggregation:0x00007ff46db30c18 @duration=3600000, @type="avg">,
+    @destination_key="ts1",
+    @source=
+     #<Redis::TimeSeries:0x00007ff46da9b578
+      @key="ts3",
+      @redis=#<Redis client v4.2.1 for redis://127.0.0.1:6379/0>>>]>
+
 # Each info property is also a method on the time series object
 ts.memory_usage
 => 4208
@@ -174,6 +184,7 @@ ts.labels
 => {"foo"=>"bar"}
 ts.total_samples
 => 3
+
 # Total samples also available as #count, #length, and #size
 ts.count
 => 3
@@ -264,9 +275,26 @@ ts.create_rule(dest: other_ts, aggregation: agg)
 # Class-level method also available
 Redis::TimeSeries.create_rule(source: ts, dest: other_ts, aggregation: ['std.p', 150000])
 ```
+Get existing compaction rules
+```ruby
+ts.rules
+=> [#<Redis::TimeSeries::Rule:0x00007ff46e91c728
+  @aggregation=#<Redis::TimeSeries::Aggregation:0x00007ff46e91c6d8 @duration=3600000, @type="avg">,
+  @destination_key="ts1",
+  @source=
+   #<Redis::TimeSeries:0x00007ff46da9b578 @key="ts3", @redis=#<Redis client v4.2.1 for redis://127.0.0.1:6379/0>>>]
+
+# Get properties of a rule too
+ts.rules.first.aggregation
+=> #<Redis::TimeSeries::Aggregation:0x00007ff46d146d38 @duration=3600000, @type="avg">
+ts.rules.first.destination
+=> #<Redis::TimeSeries:0x00007ff46d8a3d60 @key="ts1", @redis=#<Redis client v4.2.1 for redis://127.0.0.1:6379/0>>
+```
+
 Remove an existing compaction rule
 ```ruby
 ts.delete_rule(dest: 'other_ts')
+ts.rules.first.delete
 Redis::TimeSeries.delete_rule(source: ts, dest: 'other_ts')
 ```
 
