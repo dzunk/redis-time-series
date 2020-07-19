@@ -35,7 +35,7 @@ class Redis
         end
         @type = type.to_s
         if defined?(ActiveSupport::Duration) && duration.is_a?(ActiveSupport::Duration)
-          @duration = duration.to_i * 1000
+          @duration = duration.in_milliseconds
         else
           @duration = duration.to_i
         end
