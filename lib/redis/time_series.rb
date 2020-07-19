@@ -70,8 +70,8 @@ class Redis
       @redis = redis
     end
 
-    def add(value, timestamp = '*')
-      ts = cmd 'TS.ADD', key, timestamp, value
+    def add(value, timestamp = '*', uncompressed: nil)
+      ts = cmd 'TS.ADD', key, timestamp, value, ('UNCOMPRESSED' if uncompressed)
       Sample.new(ts, value)
     end
 
@@ -91,8 +91,8 @@ class Redis
       self.class.delete_rule(source: self, dest: dest)
     end
 
-    def decrby(value = 1, timestamp = nil)
-      cmd 'TS.DECRBY', key, value, (timestamp if timestamp)
+    def decrby(value = 1, timestamp = nil, uncompressed: nil)
+      cmd 'TS.DECRBY', key, value, (timestamp if timestamp), ('UNCOMPRESSED' if uncompressed)
     end
     alias decrement decrby
 
@@ -107,8 +107,8 @@ class Redis
       end
     end
 
-    def incrby(value = 1, timestamp = nil)
-      cmd 'TS.INCRBY', key, value, (timestamp if timestamp)
+    def incrby(value = 1, timestamp = nil, uncompressed: nil)
+      cmd 'TS.INCRBY', key, value, (timestamp if timestamp), ('UNCOMPRESSED' if uncompressed)
     end
     alias increment incrby
 
