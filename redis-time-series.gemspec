@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'redis-time-series'
+require 'redis/time_series/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'redis-time-series'
-  spec.version       = RedisTimeSeries::VERSION
+  spec.version       = Redis::TimeSeries::VERSION
   spec.authors       = ['Matt Duszynski']
-  spec.email         = ['mattduszynski@gmail.com']
+  spec.email         = ['dzunk@hey.com']
 
   spec.summary       = %q{A Ruby adapter for the RedisTimeSeries module.}
   # spec.description   = %q{TODO: Write a longer description or delete this line.}
