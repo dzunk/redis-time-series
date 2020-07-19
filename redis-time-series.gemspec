@@ -38,4 +38,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pry', '~> 0.13'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rspec', '~> 3.0'
+  spec.add_development_dependency 'simplecov', '< 0.18' # https://github.com/codeclimate/test-reporter/issues/413
 end
