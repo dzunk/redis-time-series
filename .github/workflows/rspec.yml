@@ -30,8 +30,6 @@ jobs:
       run: |
         curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
         chmod +x ./cc-test-reporter
-        echo $GIT_COMMIT_SHA
-        echo $GIT_BRANCH
         ./cc-test-reporter before-build
     - name: Install dependencies
       run: bundle install
@@ -39,3 +37,7 @@ jobs:
       run: bundle exec rake spec
     - name: Upload coverage report
       run: ./cc-test-reporter after-build -t simplecov coverage/.resultset.json
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: coverage/
