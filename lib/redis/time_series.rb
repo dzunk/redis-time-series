@@ -113,7 +113,7 @@ class Redis
     alias increment incrby
 
     def info
-      cmd('TS.INFO', key).then(&Info.method(:parse))
+      Info.parse cmd('TS.INFO', key), series: self
     end
     def_delegators :info, *Info.members
     %i[count length size].each { |m| def_delegator :info, :total_samples, m }

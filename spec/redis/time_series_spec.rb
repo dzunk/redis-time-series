@@ -312,6 +312,7 @@ RSpec.describe Redis::TimeSeries do
       expect(info).to be_a Redis::TimeSeries::Info
       expect(info.to_h).to eq(
         {
+          series: ts,
           total_samples: 0,
           memory_usage: 4184,
           first_timestamp: 0,

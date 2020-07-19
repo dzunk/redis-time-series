@@ -30,10 +30,11 @@ class Redis
       end
 
       def initialize(type, duration)
-        unless TYPES.include? type.to_s
+        type = type.to_s.downcase
+        unless TYPES.include? type
           raise AggregationError, "#{type} is not a valid aggregation type!"
         end
-        @type = type.to_s
+        @type = type
         if defined?(ActiveSupport::Duration) && duration.is_a?(ActiveSupport::Duration)
           @duration = duration.in_milliseconds
         else
