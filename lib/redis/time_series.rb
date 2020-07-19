@@ -3,28 +3,20 @@ using TimeMsec
 
 class Redis
   class TimeSeries
+    extend Client
     extend Forwardable
 
     class << self
       def create(key, **options)
-        new(key, **options).create(labels: options[:labels])
+        new(key, redis: options.fetch(:redis, redis)).create(**options)
       end
 
       def create_rule(source:, dest:, aggregation:)
-        args = [
-          source.is_a?(self) ? source.key : source.to_s,
-          dest.is_a?(self) ? dest.key : dest.to_s,
-          Aggregation.parse(aggregation).to_a
-        ]
-        redis.call 'TS.CREATERULE', *args.flatten
+        cmd 'TS.CREATERULE', key_for(source), key_for(dest), Aggregation.parse(aggregation).to_a
       end
 
       def delete_rule(source:, dest:)
-        args = [
-          source.is_a?(self) ? source.key : source.to_s,
-          dest.is_a?(self) ? dest.key : dest.to_s
-        ]
-        redis.call 'TS.DELETERULE', *args
+        cmd 'TS.DELETERULE', key_for(source), key_for(dest)
       end
 
       def destroy(key)
@@ -33,24 +25,10 @@ class Redis
 
       def madd(data)
         data.reduce([]) do |memo, (key, value)|
-          if value.is_a?(Hash) || (value.is_a?(Array) && value.first.is_a?(Array))
-            # multiple timestamp => value pairs
-            value.each do |timestamp, nested_value|
-              timestamp = timestamp.ts_msec if timestamp.is_a? Time
-              memo << [key, timestamp, nested_value]
-            end
-          elsif value.is_a? Array
-            # single [timestamp, value]
-            key = key.ts_msec if key.is_a? Time
-            memo << [key, value]
-          else
-            # single value, no timestamp
-            memo << [key, '*', value]
-          end
+          memo << parse_madd_values(key, value)
           memo
         end.then do |args|
-          puts "DEBUG: TS.MADD #{args.join(' ')}" if ENV['DEBUG']
-          redis.call('TS.MADD', args.flatten).each_with_index.map do |result, idx|
+          cmd('TS.MADD', args).each_with_index.map do |result, idx|
             result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
           end
         end
@@ -59,41 +37,49 @@ class Redis
       def query_index(filter_value)
         filters = Filters.new(filter_value)
         filters.validate!
-        puts "DEBUG: TS.QUERYINDEX #{filters.to_a.join(' ')}" if ENV['DEBUG']
-        redis.call('TS.QUERYINDEX', *filters.to_a).map { |key| new(key) }
+        cmd('TS.QUERYINDEX', filters.to_a).map { |key| new(key) }
       end
       alias where query_index
 
-      def redis
-        @redis ||= Redis.current
+      private
+
+      def key_for(series_or_string)
+        series_or_string.is_a?(self) ? series_or_string.key : series_or_string.to_s
       end
 
-      def redis=(client)
-        @redis = redis
+      def parse_madd_values(key, raw)
+        if raw.is_a?(Hash) || (raw.is_a?(Array) && raw.first.is_a?(Array))
+          # multiple timestamp => value pairs
+          raw.map do |timestamp, value|
+            [key, timestamp, value]
+          end
+        elsif raw.is_a? Array
+          # single [timestamp, value]
+          [key, raw.first, raw.last]
+        else
+          # single value, no timestamp
+          [key, '*', raw]
+        end
       end
     end
 
-    attr_reader :key, :redis, :retention, :uncompressed
+    attr_reader :key
 
-    def initialize(key, options = {})
+    def initialize(key, redis: self.class.redis)
       @key = key
-      @redis = options[:redis] || self.class.redis
-      @retention = options[:retention]
-      @uncompressed = options[:uncompressed] || false
+      @redis = redis
     end
 
     def add(value, timestamp = '*')
-      timestamp = timestamp.ts_msec if timestamp.is_a? Time
       ts = cmd 'TS.ADD', key, timestamp, value
       Sample.new(ts, value)
     end
 
-    def create(labels: nil)
-      args = [key]
-      args << ['RETENTION', retention] if retention
-      args << 'UNCOMPRESSED' if uncompressed
-      args << ['LABELS', labels.to_a] if labels&.any?
-      cmd 'TS.CREATE', args.flatten
+    def create(retention: nil, uncompressed: nil, labels: nil)
+      cmd 'TS.CREATE', key,
+          (['RETENTION', retention] if retention),
+          ('UNCOMPRESSED' if uncompressed),
+          (['LABELS', labels.to_a] if labels&.any?)
       self
     end
 
@@ -106,9 +92,7 @@ class Redis
     end
 
     def decrby(value = 1, timestamp = nil)
-      args = [key, value]
-      args << timestamp if timestamp
-      cmd 'TS.DECRBY', args
+      cmd 'TS.DECRBY', key, value, (timestamp if timestamp)
     end
     alias decrement decrby
 
@@ -124,9 +108,7 @@ class Redis
     end
 
     def incrby(value = 1, timestamp = nil)
-      args = [key, value]
-      args << timestamp if timestamp
-      cmd 'TS.INCRBY', args
+      cmd 'TS.INCRBY', key, value, (timestamp if timestamp)
     end
     alias increment incrby
 
@@ -137,14 +119,13 @@ class Redis
     %i[count length size].each { |m| def_delegator :info, :total_samples, m }
 
     def labels=(val)
-      cmd 'TS.ALTER', key, 'LABELS', val.to_a.flatten
+      cmd 'TS.ALTER', key, 'LABELS', val.to_a
     end
 
     def madd(*values)
       if values.one? && values.first.is_a?(Hash)
         # Hash of timestamp => value pairs
         args = values.first.map do |ts, val|
-          ts = ts.ts_msec if ts.is_a? Time
           [key, ts, val]
         end.flatten
       elsif values.one? && values.first.is_a?(Array)
@@ -179,15 +160,7 @@ class Redis
     end
 
     def retention=(val)
-      @retention = val.to_i
       cmd 'TS.ALTER', key, 'RETENTION', val.to_i
-    end
-
-    private
-
-    def cmd(name, *args)
-      puts "DEBUG: #{name} #{args.join(' ')}" if ENV['DEBUG']
-      redis.call name, *args
     end
   end
 end
