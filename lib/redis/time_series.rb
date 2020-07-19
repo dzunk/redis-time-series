@@ -113,7 +113,7 @@ class Redis
     alias increment incrby
 
     def info
-      cmd('TS.INFO', key).then(&Info.method(:parse))
+      Info.parse series: self, data: cmd('TS.INFO', key)
     end
     def_delegators :info, *Info.members
     %i[count length size].each { |m| def_delegator :info, :total_samples, m }
@@ -164,6 +164,11 @@ class Redis
 
     def retention=(val)
       cmd 'TS.ALTER', key, 'RETENTION', val.to_i
+    end
+
+    def ==(other)
+      return false unless other.is_a?(self.class)
+      key == other.key && redis == other.redis
     end
   end
 end

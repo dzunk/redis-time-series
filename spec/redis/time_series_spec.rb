@@ -312,6 +312,7 @@ RSpec.describe Redis::TimeSeries do
       expect(info).to be_a Redis::TimeSeries::Info
       expect(info.to_h).to eq(
         {
+          series: ts,
           total_samples: 0,
           memory_usage: 4184,
           first_timestamp: 0,
@@ -393,6 +394,31 @@ RSpec.describe Redis::TimeSeries do
         expect(result.first).to be_a described_class
         expect(result.first.key).to eq 'good'
       end
+    end
+  end
+
+  describe 'equality' do
+    let(:other_ts) { described_class.new(other_key, redis: redis) }
+
+    context 'when key and client match' do
+      let(:other_key) { ts.key }
+      let(:redis) { ts.redis }
+
+      it { is_expected.to eq other_ts }
+    end
+
+    context 'when key does not match' do
+      let(:other_key) { 'other_key' }
+      let(:redis) { ts.redis }
+
+      it { is_expected.not_to eq other_ts }
+    end
+
+    context 'when client does not match' do
+      let(:other_key) { ts.key }
+      let(:redis) { Redis.new }
+
+      it { is_expected.not_to eq other_ts }
     end
   end
 end
