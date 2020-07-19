@@ -23,7 +23,7 @@ class Redis
         end.then do |parsed_hash|
           parsed_hash['series'] = series
           parsed_hash['labels'] = parsed_hash['labels'].to_h
-          parsed_hash['rules'] = parsed_hash['rules'].map { |r| Rule.new(r, source: series) }
+          parsed_hash['rules'] = parsed_hash['rules'].map { |d| Rule.new(source: series, data: d) }
           new(parsed_hash)
         end
       end

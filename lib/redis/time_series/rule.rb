@@ -4,10 +4,10 @@ class Redis
     class Rule
       attr_reader :source, :destination_key, :aggregation
 
-      def initialize(args, source:)
-        @destination_key, duration, aggregation_type = args
-        @aggregation = Aggregation.new(aggregation_type, duration)
+      def initialize(source:, data:)
         @source = source
+        @destination_key, duration, aggregation_type = data
+        @aggregation = Aggregation.new(aggregation_type, duration)
       end
 
       def destination

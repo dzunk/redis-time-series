@@ -165,5 +165,10 @@ class Redis
     def retention=(val)
       cmd 'TS.ALTER', key, 'RETENTION', val.to_i
     end
+
+    def ==(other)
+      return false unless other.is_a?(self.class)
+      key == other.key && redis == other.redis
+    end
   end
 end
