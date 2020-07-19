@@ -73,6 +73,10 @@ Add a single value with a timestamp
 ```ruby
 ts.add 1234, 3.minutes.ago # Used ActiveSupport here, but any Time object works fine
 => #<Redis::TimeSeries::Sample:0x00007fa6ce05f3f8 @time=2020-06-25 23:39:54 -0700, @value=0.1234e4>
+
+# Optionally store data uncompressed
+ts.add 5678, uncompressed: true
+=> #<Redis::TimeSeries::Sample:0x00007f93f43cdf68 @time=2020-07-18 23:15:29 -0700, @value=0.5678e4>
 ```
 Add multiple values with timestamps
 ```ruby
@@ -89,6 +93,10 @@ ts.increment # alias of incrby
 => 1593154255069
 ts.decrement # alias of decrby
 => 1593154257344
+
+# Optionally store data uncompressed
+ts.incrby 4, uncompressed: true
+=> 1595139299769
 ```
 ```ruby
 ts.get
