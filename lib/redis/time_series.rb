@@ -145,18 +145,21 @@ class Redis
       cmd 'TS.MADD', args
     end
 
-    def range(range, count: nil, agg: nil)
-      if range.is_a? Hash
-        args = range.fetch(:from), range.fetch(:to)
-      elsif range.is_a? Range
-        args = range.min, range.max
+    def range(range, count: nil, aggregation: nil)
+      if range.is_a?(Hash)
+        # This is to support from: and to: passed in as hash keys
+        # `range` will swallow all parameters if they're all hash syntax
+        count = range.delete(:count)
+        aggregation = range.delete(:aggregation)
+        range = range.fetch(:from)..range.fetch(:to)
       end
-      args.map! { |ts| (ts.to_f * 1000).to_i }
-      args.append('COUNT', count) if count
-      args.append('AGGREGATION', agg) if agg
-      cmd('TS.RANGE', key, args).map do |ts, val|
-        Sample.new(ts, val)
-      end
+      cmd('TS.RANGE',
+          key,
+          range.min,
+          range.max,
+          (['COUNT', count] if count),
+          Aggregation.parse(aggregation)&.to_a
+         ).map { |ts, val| Sample.new(ts, val) }
     end
 
     def retention=(val)

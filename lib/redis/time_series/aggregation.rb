@@ -23,6 +23,7 @@ class Redis
       alias time_bucket duration
 
       def self.parse(agg)
+        return unless agg
         return agg if agg.is_a?(self)
         return new(agg.first, agg.last) if agg.is_a?(Array) && agg.size == 2
         raise AggregationError, "Couldn't parse #{agg} into an aggregation rule!"
@@ -33,7 +34,11 @@ class Redis
           raise AggregationError, "#{type} is not a valid aggregation type!"
         end
         @type = type.to_s
-        @duration = duration.to_i
+        if defined?(ActiveSupport::Duration) && duration.is_a?(ActiveSupport::Duration)
+          @duration = duration.to_i * 1000
+        else
+          @duration = duration.to_i
+        end
       end
 
       def to_a
