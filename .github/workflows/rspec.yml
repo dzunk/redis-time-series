@@ -18,7 +18,6 @@ jobs:
           - 6379:6379/tcp
     env:
       CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-      GIT_COMMIT_SHA: ${{ github.sha }}
       GIT_BRANCH: ${{ github.ref }}
     steps:
     - uses: actions/checkout@v2
