@@ -3,10 +3,12 @@
 system 'bundle install'
 system 'docker pull redislabs/redistimeseries:latest'
 container_id = `docker run -p 6379:6379 -dit --rm redislabs/redistimeseries`
+at_exit { system "docker stop #{container_id}" }
 
 require 'bundler/setup'
 require 'active_support/core_ext/numeric/time'
 require 'redis'
+require 'redis-time-series'
 
 Redis.current.flushall
 ts1 = Redis::TimeSeries.create('ts1')
@@ -26,5 +28,4 @@ ts3.incrby 2
 sleep 0.01
 ts3.decrement
 
-at_exit { system "docker stop #{container_id}" }
 system "docker logs -f #{container_id}"
