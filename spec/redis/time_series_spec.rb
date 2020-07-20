@@ -297,7 +297,7 @@ RSpec.describe Redis::TimeSeries do
     it 'returns a Sample' do
       timestamp = ts.increment
       expect(ts.get).to be_a Redis::TimeSeries::Sample
-      expect(ts.get.ts_msec).to eq timestamp
+      expect(ts.get.to_msec).to eq timestamp
     end
   end
 
@@ -327,7 +327,7 @@ RSpec.describe Redis::TimeSeries do
       )
     end
 
-    Redis::TimeSeries::Info.members.each do |member|
+    (Redis::TimeSeries::Info.members - [:series]).each do |member|
       it "delegates ##{member} to #info" do
         expect(ts).to respond_to member
         expect(ts.public_send(member)).to eq ts.info.public_send(member)

@@ -19,8 +19,8 @@ RSpec.describe Redis::TimeSeries::Sample do
     it { is_expected.to eq BigDecimal(value) }
   end
 
-  describe '#ts_msec' do
-    subject { sample.ts_msec }
+  describe '#to_msec' do
+    subject { sample.to_msec }
 
     it { is_expected.to be_an Integer }
     it { is_expected.to eq timestamp }

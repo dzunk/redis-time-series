@@ -1,13 +1,17 @@
 class Redis
   class TimeSeries
-    # Base error class for convenient `rescue`ing
-    class Error < StandardError; end
+    # Base error class for convenient +rescue+-ing.
+    #
+    # Descendant of +Redis::BaseError+, so you can rescue that and capture all
+    # time-series errors, as well as standard Redis command errors.
+    class Error < Redis::BaseError; end
 
-    # Invalid filter error is raised when attempting to filter without at least
-    # one equality comparison ("foo=bar")
+    # +FilterError+ is raised when a given set of filters is invalid (i.e. does not contain
+    # a equality comparison "foo=bar"), or the filter value is unparseable.
+    # @see Redis::TimeSeries::Filters
     class FilterError < Error; end
 
-    # Aggregation error is raised when attempting to create anaggreation with
+    # +AggregationError+ is raised when attempting to create an aggreation with
     # an unknown type, or when calling a command with an invalid aggregation value.
     # @see Redis::TimeSeries::Aggregation
     class AggregationError < Error; end
