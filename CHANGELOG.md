@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.5.0
 * Fix aggregations for TS.RANGE command (#34)
 * Extract client handling into Client module (#32)
 * Add `uncompressed` param to TS.ADD, TS.INCRBY, TS.DECRBY (#35)
