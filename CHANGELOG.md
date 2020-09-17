@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.5.1
+* Update Info struct for RTS 1.4 compatibility (#45)
+
 ## 0.5.0
 * Fix aggregations for TS.RANGE command (#34)
 * Extract client handling into Client module (#32)
