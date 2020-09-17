@@ -37,6 +37,8 @@ class Redis
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsinfo
     Info = Struct.new(
       :chunk_count,
+      :chunk_size,
+      :duplicate_policy,
       :first_timestamp,
       :labels,
       :last_timestamp,

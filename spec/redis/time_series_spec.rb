@@ -312,17 +312,19 @@ RSpec.describe Redis::TimeSeries do
       expect(info).to be_a Redis::TimeSeries::Info
       expect(info.to_h).to eq(
         {
-          series: ts,
-          total_samples: 0,
-          memory_usage: 4184,
-          first_timestamp: 0,
-          last_timestamp: 0,
-          retention_time: 0,
           chunk_count: 1,
-          max_samples_per_chunk: 256,
+          chunk_size: 4096,
+          duplicate_policy: nil,
+          first_timestamp: 0,
           labels: {},
+          last_timestamp: 0,
+          max_samples_per_chunk: nil,
+          memory_usage: 4184,
+          retention_time: 0,
+          rules: [],
+          series: ts,
           source_key: nil,
-          rules: []
+          total_samples: 0
         }
       )
     end
