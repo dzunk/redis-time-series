@@ -88,6 +88,23 @@ class Redis
         redis.del key
       end
 
+      # Add multiple values to multiple series.
+      #
+      # @example Adding multiple values with timestamps
+      #   Redis::TimeSeries.madd(
+      #     foo: { 2.minutes.ago => 123, 1.minute.ago => 456, Time.current => 789) },
+      #     bar: { 2.minutes.ago => 987, 1.minute.ago => 654, Time.current => 321) }
+      #   )
+      # @example Adding multiple values without timestamps
+      #   Redis::TimeSeries.madd(foo: 1, bar: 2, baz: 3)
+      #
+      # @param data [Hash] A hash of key-value pairs, with the key being the name of
+      #   the series, and the value being a single scalar value or a nested hash
+      #   of timestamp => value pairs
+      # @return [Array<Sample, Redis::CommandError>] an array of the resulting samples
+      #   added, or a CommandError if the sample in question could not be added to the
+      #   series
+      #
       def madd(data)
         data.reduce([]) do |memo, (key, value)|
           memo << parse_madd_values(key, value)
@@ -98,6 +115,8 @@ class Redis
           end
         end
       end
+      alias multi_add madd
+      alias add_multiple madd
 
       # Search for a time series matching the provided filters. Refer to the {Filters} documentation
       # for more details on how to filter.
@@ -129,14 +148,17 @@ class Redis
       end
 
       def parse_madd_values(key, raw)
-        if raw.is_a?(Hash) || (raw.is_a?(Array) && raw.first.is_a?(Array))
+        if raw.is_a? Hash
           # multiple timestamp => value pairs
           raw.map do |timestamp, value|
             [key, timestamp, value]
           end
         elsif raw.is_a? Array
-          # single [timestamp, value]
-          [key, raw.first, raw.last]
+          # multiple values, no timestamps
+          now = Time.now.ts_msec
+          raw.each_with_index.map do |value, index|
+            [key, now + index, value]
+          end
         else
           # single value, no timestamp
           [key, '*', raw]
@@ -301,28 +323,15 @@ class Redis
       cmd 'TS.ALTER', key, 'LABELS', val.to_a
     end
 
-    def madd(*values)
-      if values.one? && values.first.is_a?(Hash)
-        # Hash of timestamp => value pairs
-        args = values.first.map do |ts, val|
-          [key, ts, val]
-        end.flatten
-      elsif values.one? && values.first.is_a?(Array)
-        # Array of values, no timestamps
-        initial_ts = Time.now.ts_msec
-        args = values.first.each_with_index.map do |val, idx|
-          [key, initial_ts + idx, val]
-        end.flatten
-      else
-        # Values as individual arguments, no timestamps
-        initial_ts = Time.now.ts_msec
-        args = values.each_with_index.map do |val, idx|
-          [key, initial_ts + idx, val]
-        end.flatten
+    def madd(values)
+      args = self.class.send(:parse_madd_values, key, values)
+      binding.pry
+      cmd('TS.MADD', args).each_with_index.map do |result, idx|
+        result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
       end
-      # TODO: return Sample objects here
-      cmd 'TS.MADD', args
     end
+    alias multi_add madd
+    alias add_multiple madd
 
     # Get a range of values from the series
     #
