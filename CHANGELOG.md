@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Build against edge upstream in addition to latest stable (#48)
 
 ## 0.5.2
 * Add chunk_type to info struct (#47)

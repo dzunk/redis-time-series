@@ -11,9 +11,12 @@ on:
 jobs:
   spec:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image_version: ['latest', 'edge']
     services:
       redis:
-        image: redislabs/redistimeseries:latest
+        image: redislabs/redistimeseries:${{ matrix.image_version }}
         ports:
           - 6379:6379/tcp
     env:
