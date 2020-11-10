@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.5.2
 * Add chunk_type to info struct (#47)
 
 ## 0.5.1

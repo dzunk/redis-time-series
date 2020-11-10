@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    redis-time-series (0.5.1)
+    redis-time-series (0.5.2)
       redis (~> 4.0)
 
 GEM
