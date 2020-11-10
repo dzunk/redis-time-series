@@ -314,6 +314,7 @@ RSpec.describe Redis::TimeSeries do
         {
           chunk_count: 1,
           chunk_size: 4096,
+          chunk_type: 'compressed',
           duplicate_policy: nil,
           first_timestamp: 0,
           labels: {},

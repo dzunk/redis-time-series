@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Add chunk_type to info struct (#47)
 
 ## 0.5.1
 * Update Info struct for RTS 1.4 compatibility (#45)
