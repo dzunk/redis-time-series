@@ -10,6 +10,10 @@ class Redis
     #
     # @!attribute [r] chunk_count
     #   @return [Integer] number of memory chunks used for the time-series
+    # @!attribute [r] chunk_size
+    #   @return [Integer] amount of allocated memory in bytes
+    # @!attribute [r] chunk_type
+    #   @return [Integer] whether the chunk is "compressed" or "uncompressed"
     # @!attribute [r] first_timestamp
     #   @return [Integer] first timestamp present in the time-series (milliseconds since epoch)
     # @!attribute [r] labels
@@ -52,20 +56,32 @@ class Redis
       :total_samples,
       keyword_init: true
     ) do
-      # @api private
-      # @return [Info]
-      def self.parse(series:, data:)
-        data.each_slice(2).reduce({}) do |h, (key, value)|
-          # Convert camelCase info keys to snake_case
-          key = key.gsub(/(.)([A-Z])/,'\1_\2').downcase.to_sym
-          next h unless members.include?(key)
-          h[key] = value
-          h
-        end.then do |parsed_hash|
-          parsed_hash[:series] = series
-          parsed_hash[:labels] = parsed_hash[:labels].to_h
-          parsed_hash[:rules] = parsed_hash[:rules].map { |d| Rule.new(source: series, data: d) }
-          new(parsed_hash)
+      class << self
+        # @api private
+        # @return [Info]
+        def parse(series:, data:)
+          build_hash(data)
+            .then { |h| transform_hash_values(h, series) }
+            .then { |h| new(h) }
+        end
+
+        private
+
+        def build_hash(data)
+          data.each_slice(2).reduce({}) do |h, (key, value)|
+            # Convert camelCase info keys to snake_case
+            key = key.gsub(/(.)([A-Z])/,'\1_\2').downcase.to_sym
+            # Skip unknown properties
+            next h unless members.include?(key)
+            h.merge(key => value)
+          end
+        end
+
+        def transform_hash_values(hash, series)
+          hash[:series] = series
+          hash[:labels] = hash[:labels].to_h.transform_values { |v| v.to_i.to_s == v ? v.to_i : v }
+          hash[:rules] = hash[:rules].map { |d| Rule.new(source: series, data: d) }
+          hash
         end
       end
 

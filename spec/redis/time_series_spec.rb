@@ -54,8 +54,7 @@ RSpec.describe Redis::TimeSeries do
         expect { create }.to issue_command "TS.CREATE #{key} LABELS foo bar baz 1 plugh true"
         expect(ts.labels).to eq(
           'foo' => 'bar',
-          # TODO: cast values
-          'baz' => '1',
+          'baz' => 1,
           'plugh' => 'true'
         )
       end
