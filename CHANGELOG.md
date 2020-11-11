@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Cast label values to integers in Info struct (#49)
 * Build against edge upstream in addition to latest stable (#48)
 
 ## 0.5.2
