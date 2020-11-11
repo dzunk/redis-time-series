@@ -312,12 +312,12 @@ class Redis
         # `range` will swallow all parameters if they're all hash syntax
         count = range.delete(:count)
         aggregation = range.delete(:aggregation)
-        range = range.fetch(:from)..range.fetch(:to)
+        range = range.fetch(:from)..range[:to]
       end
       cmd('TS.RANGE',
           key,
-          range.min,
-          range.max,
+          (range.begin || first_timestamp),
+          (range.end || last_timestamp),
           (['COUNT', count] if count),
           Aggregation.parse(aggregation)&.to_a
          ).map { |ts, val| Sample.new(ts, val) }
