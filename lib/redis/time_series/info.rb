@@ -13,7 +13,7 @@ class Redis
     # @!attribute [r] chunk_size
     #   @return [Integer] amount of allocated memory in bytes
     # @!attribute [r] chunk_type
-    #   @return [Integer] whether the chunk is "compressed" or "uncompressed"
+    #   @return [String] whether the chunk is "compressed" or "uncompressed"
     # @!attribute [r] first_timestamp
     #   @return [Integer] first timestamp present in the time-series (milliseconds since epoch)
     # @!attribute [r] labels
