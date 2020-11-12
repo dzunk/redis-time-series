@@ -15,5 +15,10 @@ class Redis
     # an unknown type, or when calling a command with an invalid aggregation value.
     # @see Redis::TimeSeries::Aggregation
     class AggregationError < Error; end
+
+    # +UnknownPolicyError+ is raised when attempting to apply an unkown type of
+    # duplicate policy when creating or adding to a series.
+    # @see Redis::TimeSeries::DuplicatePolicy
+    class UnknownPolicyError < Error; end
   end
 end

@@ -47,6 +47,14 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
+    context 'with a duplication policy' do
+      let(:options) { { duplicate_policy: :max } }
+
+      specify do
+        expect { create }.to issue_command "TS.CREATE #{key} DUPLICATE_POLICY max"
+      end
+    end
+
     context 'with labels' do
       let(:options) { { labels: { foo: 'bar', baz: 1, plugh: true } } }
 
@@ -111,6 +119,10 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with uncompressed: true' do
       specify { expect { ts.add 123, uncompressed: true }.to issue_command "TS.ADD #{key} * 123 UNCOMPRESSED" }
+    end
+
+    context 'with a duplication policy' do
+      specify { expect { ts.add 123, on_duplicate: :sum }.to issue_command "TS.ADD #{key} * 123 ON_DUPLICATE sum" }
     end
 
     it 'returns the added Sample' do

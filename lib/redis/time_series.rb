@@ -37,6 +37,9 @@ class Redis
       #   With no value, the series will not be trimmed.
       # @option options [Boolean] :uncompressed
       #   When true, series data will be stored in an uncompressed format.
+      # @option options [String, Symbol] :duplicate_policy
+      #   A duplication policy to resolve conflicts when adding values to the series.
+      #   Valid values are in Redis::TimeSeries::DuplicatePolicy::VALID_POLICIES
       #
       # @return [Redis::TimeSeries] the created time series
       # @see https://oss.redislabs.com/redistimeseries/commands/#tscreate
@@ -154,21 +157,30 @@ class Redis
     # @param value [Numeric] the value to add
     # @param timestamp [Time, Numeric] the +Time+, or integer timestamp in milliseconds, to add the value
     # @param uncompressed [Boolean] if true, stores data in an uncompressed format
+    # @param on_duplicate [String, Symbol] a duplication policy for conflict resolution
     #
     # @return [Sample] the value that was added
     # @raise [Redis::CommandError] if the value being added is older than the latest timestamp in the series
-    def add(value, timestamp = '*', uncompressed: nil)
-      ts = cmd 'TS.ADD', key, timestamp, value, ('UNCOMPRESSED' if uncompressed)
+    #
+    # @see TimeSeries::DuplicatePolicy
+    def add(value, timestamp = '*', uncompressed: nil, on_duplicate: nil)
+      ts = cmd 'TS.ADD',
+               key,
+               timestamp,
+               value,
+               ('UNCOMPRESSED' if uncompressed),
+               (DuplicatePolicy.new(on_duplicate).to_a('ON_DUPLICATE') if on_duplicate)
       Sample.new(ts, value)
     end
 
     # Issues a TS.CREATE command for the current series.
     # You should use class method {Redis::TimeSeries.create} instead.
     # @api private
-    def create(retention: nil, uncompressed: nil, labels: nil)
+    def create(retention: nil, uncompressed: nil, labels: nil, duplicate_policy: nil)
       cmd 'TS.CREATE', key,
           (['RETENTION', retention] if retention),
           ('UNCOMPRESSED' if uncompressed),
+          (DuplicatePolicy.new(duplicate_policy).to_a if duplicate_policy),
           (['LABELS', labels.to_a] if labels&.any?)
       self
     end
