@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Add duplication policy to TS.CREATE and TS.ADD commands (#51)
 * Add support for endless ranges to TS.RANGE (#50)
 * Cast label values to integers in Info struct (#49)
 * Build against edge upstream in addition to latest stable (#48)
