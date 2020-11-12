@@ -78,6 +78,7 @@ class Redis
         end
 
         def transform_hash_values(hash, series)
+          hash[:duplicate_policy] = DuplicatePolicy.new(hash[:duplicate_policy]) if hash[:duplicate_policy]
           hash[:series] = series
           hash[:labels] = hash[:labels].to_h.transform_values { |v| v.to_i.to_s == v ? v.to_i : v }
           hash[:rules] = hash[:rules].map { |d| Rule.new(source: series, data: d) }

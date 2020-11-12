@@ -37,6 +37,9 @@ class Redis
       #   With no value, the series will not be trimmed.
       # @option options [Boolean] :uncompressed
       #   When true, series data will be stored in an uncompressed format.
+      # @option options [String, Symbol] :duplicate_policy
+      #   A duplication policy to resolve conflicts when adding values to the series.
+      #   Valid values are in Redis::TimeSeries::DuplicatePolicy::VALID_POLICIES
       #
       # @return [Redis::TimeSeries] the created time series
       # @see https://oss.redislabs.com/redistimeseries/commands/#tscreate
@@ -165,10 +168,11 @@ class Redis
     # Issues a TS.CREATE command for the current series.
     # You should use class method {Redis::TimeSeries.create} instead.
     # @api private
-    def create(retention: nil, uncompressed: nil, labels: nil)
+    def create(retention: nil, uncompressed: nil, labels: nil, duplicate_policy: nil)
       cmd 'TS.CREATE', key,
           (['RETENTION', retention] if retention),
           ('UNCOMPRESSED' if uncompressed),
+          (DuplicatePolicy.new(duplicate_policy).to_a if duplicate_policy),
           (['LABELS', labels.to_a] if labels&.any?)
       self
     end

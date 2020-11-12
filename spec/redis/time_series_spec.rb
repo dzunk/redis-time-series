@@ -47,6 +47,14 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
+    context 'with a duplication policy' do
+      let(:options) { { duplicate_policy: :max } }
+
+      specify do
+        expect { create }.to issue_command "TS.CREATE #{key} DUPLICATE_POLICY max"
+      end
+    end
+
     context 'with labels' do
       let(:options) { { labels: { foo: 'bar', baz: 1, plugh: true } } }
 
