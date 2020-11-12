@@ -157,11 +157,19 @@ class Redis
     # @param value [Numeric] the value to add
     # @param timestamp [Time, Numeric] the +Time+, or integer timestamp in milliseconds, to add the value
     # @param uncompressed [Boolean] if true, stores data in an uncompressed format
+    # @param on_duplicate [String, Symbol] a duplication policy for conflict resolution
     #
     # @return [Sample] the value that was added
     # @raise [Redis::CommandError] if the value being added is older than the latest timestamp in the series
-    def add(value, timestamp = '*', uncompressed: nil)
-      ts = cmd 'TS.ADD', key, timestamp, value, ('UNCOMPRESSED' if uncompressed)
+    #
+    # @see TimeSeries::DuplicatePolicy
+    def add(value, timestamp = '*', uncompressed: nil, on_duplicate: nil)
+      ts = cmd 'TS.ADD',
+               key,
+               timestamp,
+               value,
+               ('UNCOMPRESSED' if uncompressed),
+               (DuplicatePolicy.new(on_duplicate).to_a('ON_DUPLICATE') if on_duplicate)
       Sample.new(ts, value)
     end
 

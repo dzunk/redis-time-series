@@ -121,6 +121,10 @@ RSpec.describe Redis::TimeSeries do
       specify { expect { ts.add 123, uncompressed: true }.to issue_command "TS.ADD #{key} * 123 UNCOMPRESSED" }
     end
 
+    context 'with a duplication policy' do
+      specify { expect { ts.add 123, on_duplicate: :sum }.to issue_command "TS.ADD #{key} * 123 ON_DUPLICATE sum" }
+    end
+
     it 'returns the added Sample' do
       s = ts.add 123
       expect(s).to be_a Redis::TimeSeries::Sample
