@@ -61,7 +61,8 @@ class Redis
         # @return [Info]
         def parse(series:, data:)
           build_hash(data)
-            .then { |h| transform_hash_values(h, series) }
+            .then { |h| h.merge(series: series) }
+            .then { |h| transform_hash_values(h) }
             .then { |h| new(h) }
         end
 
@@ -77,11 +78,10 @@ class Redis
           end
         end
 
-        def transform_hash_values(hash, series)
+        def transform_hash_values(hash)
           hash[:duplicate_policy] = DuplicatePolicy.new(hash[:duplicate_policy]) if hash[:duplicate_policy]
-          hash[:series] = series
           hash[:labels] = hash[:labels].to_h.transform_values { |v| v.to_i.to_s == v ? v.to_i : v }
-          hash[:rules] = hash[:rules].map { |d| Rule.new(source: series, data: d) }
+          hash[:rules] = hash[:rules].map { |d| Rule.new(source: hash[:series], data: d) }
           hash
         end
       end
