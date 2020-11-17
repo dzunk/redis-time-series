@@ -40,6 +40,8 @@ class Redis
       # @option options [String, Symbol] :duplicate_policy
       #   A duplication policy to resolve conflicts when adding values to the series.
       #   Valid values are in Redis::TimeSeries::DuplicatePolicy::VALID_POLICIES
+      # @option options [Integer] :chunk_size
+      #   Amount of memory, in bytes, to allocate for each chunk of data
       #
       # @return [Redis::TimeSeries] the created time series
       # @see https://oss.redislabs.com/redistimeseries/commands/#tscreate
@@ -158,17 +160,19 @@ class Redis
     # @param timestamp [Time, Numeric] the +Time+, or integer timestamp in milliseconds, to add the value
     # @param uncompressed [Boolean] if true, stores data in an uncompressed format
     # @param on_duplicate [String, Symbol] a duplication policy for conflict resolution
+    # @param chunk_size [Integer] set default chunk size, in bytes, for the time series
     #
     # @return [Sample] the value that was added
     # @raise [Redis::CommandError] if the value being added is older than the latest timestamp in the series
     #
     # @see TimeSeries::DuplicatePolicy
-    def add(value, timestamp = '*', uncompressed: nil, on_duplicate: nil)
+    def add(value, timestamp = '*', uncompressed: nil, on_duplicate: nil, chunk_size: nil)
       ts = cmd 'TS.ADD',
                key,
                timestamp,
                value,
                ('UNCOMPRESSED' if uncompressed),
+               (['CHUNK_SIZE', chunk_size] if chunk_size),
                (DuplicatePolicy.new(on_duplicate).to_a('ON_DUPLICATE') if on_duplicate)
       Sample.new(ts, value)
     end
@@ -176,10 +180,11 @@ class Redis
     # Issues a TS.CREATE command for the current series.
     # You should use class method {Redis::TimeSeries.create} instead.
     # @api private
-    def create(retention: nil, uncompressed: nil, labels: nil, duplicate_policy: nil)
+    def create(retention: nil, uncompressed: nil, labels: nil, duplicate_policy: nil, chunk_size: nil)
       cmd 'TS.CREATE', key,
           (['RETENTION', retention] if retention),
           ('UNCOMPRESSED' if uncompressed),
+          (['CHUNK_SIZE', chunk_size] if chunk_size),
           (DuplicatePolicy.new(duplicate_policy).to_a if duplicate_policy),
           (['LABELS', labels.to_a] if labels&.any?)
       self
@@ -218,11 +223,17 @@ class Redis
     # @param value [Integer] the amount to decrement by
     # @param timestamp [Time, Integer] the Time or integer millisecond timestamp to save the new value at
     # @param uncompressed [Boolean] if true, stores data in an uncompressed format
+    # @param chunk_size [Integer] set default chunk size, in bytes, for the time series
     #
     # @return [Integer] the timestamp the value was stored at
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsincrbytsdecrby
-    def decrby(value = 1, timestamp = nil, uncompressed: nil)
-      cmd 'TS.DECRBY', key, value, (timestamp if timestamp), ('UNCOMPRESSED' if uncompressed)
+    def decrby(value = 1, timestamp = nil, uncompressed: nil, chunk_size: nil)
+      cmd 'TS.DECRBY',
+          key,
+          value,
+          (timestamp if timestamp),
+          ('UNCOMPRESSED' if uncompressed),
+          (['CHUNK_SIZE', chunk_size] if chunk_size)
     end
     alias decrement decrby
 
@@ -253,11 +264,17 @@ class Redis
     # @param value [Integer] the amount to increment by
     # @param timestamp [Time, Integer] the Time or integer millisecond timestamp to save the new value at
     # @param uncompressed [Boolean] if true, stores data in an uncompressed format
+    # @param chunk_size [Integer] set default chunk size, in bytes, for the time series
     #
     # @return [Integer] the timestamp the value was stored at
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsincrbytsdecrby
-    def incrby(value = 1, timestamp = nil, uncompressed: nil)
-      cmd 'TS.INCRBY', key, value, (timestamp if timestamp), ('UNCOMPRESSED' if uncompressed)
+    def incrby(value = 1, timestamp = nil, uncompressed: nil, chunk_size: nil)
+      cmd 'TS.INCRBY',
+          key,
+          value,
+          (timestamp if timestamp),
+          ('UNCOMPRESSED' if uncompressed),
+          (['CHUNK_SIZE', chunk_size] if chunk_size)
     end
     alias increment incrby
 
