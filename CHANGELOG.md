@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Add CHUNK_SIZE param to CREATE, ADD, INCRBY, DECRBY commands (#53)
 * Add duplication policy to TS.CREATE and TS.ADD commands (#51)
 * Add support for endless ranges to TS.RANGE (#50)
 * Cast label values to integers in Info struct (#49)
