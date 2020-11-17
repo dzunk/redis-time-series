@@ -136,7 +136,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.add 123, chunk_size: 456 }.to issue_command "TS.ADD #{key} * 123 CHUNK_SIZE 456"
+      specify { expect { ts.add 123, chunk_size: 456 }.to issue_command "TS.ADD #{key} * 123 CHUNK_SIZE 456" }
     end
 
     it 'returns the added Sample' do
@@ -214,7 +214,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.incrby 1, chunk_size: 456 }.to issue_command "TS.INCRBY #{key} 1 CHUNK_SIZE 456"
+      specify { expect { ts.incrby 1, chunk_size: 456 }.to issue_command "TS.INCRBY #{key} 1 CHUNK_SIZE 456" }
     end
   end
 
@@ -230,7 +230,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.decrby 1, chunk_size: 456 }.to issue_command "TS.DECRBY #{key} 1 CHUNK_SIZE 456"
+      specify { expect { ts.decrby 1, chunk_size: 456 }.to issue_command "TS.DECRBY #{key} 1 CHUNK_SIZE 456" }
     end
   end
 
