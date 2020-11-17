@@ -89,7 +89,7 @@ RSpec.describe Redis::TimeSeries do
 
       specify do
         expect { create }.to issue_command \
-          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED CHUNK_SIZE 123 DUPLICATION_POLICY max LABELS xyzzy zork"
+          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED CHUNK_SIZE 123 DUPLICATE_POLICY max LABELS xyzzy zork"
       end
     end
   end
