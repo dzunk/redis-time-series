@@ -51,7 +51,7 @@ RSpec.describe Redis::TimeSeries do
       let(:options) { { chunk_size: 123 } }
 
       specify do
-        expect { create }.to issue_command "TS.CREARE #{key} CHUNK_SIZE 123"
+        expect { create }.to issue_command "TS.CREATE #{key} CHUNK_SIZE 123"
       end
     end
 
@@ -82,7 +82,7 @@ RSpec.describe Redis::TimeSeries do
           retention: 5678,
           uncompressed: true,
           labels: { xyzzy: 'zork' },
-          duplication_policy: :max,
+          duplicate_policy: :max,
           chunk_size: 123
         }
       end
