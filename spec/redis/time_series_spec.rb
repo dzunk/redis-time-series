@@ -47,6 +47,14 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
+    context 'with a chunk size' do
+      let(:options) { { chunk_size: 123 } }
+
+      specify do
+        expect { create }.to issue_command "TS.CREATE #{key} CHUNK_SIZE 123"
+      end
+    end
+
     context 'with a duplication policy' do
       let(:options) { { duplicate_policy: :max } }
 
@@ -73,13 +81,15 @@ RSpec.describe Redis::TimeSeries do
         {
           retention: 5678,
           uncompressed: true,
-          labels: { xyzzy: 'zork' }
+          labels: { xyzzy: 'zork' },
+          duplicate_policy: :max,
+          chunk_size: 123
         }
       end
 
       specify do
         expect { create }.to issue_command \
-          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED LABELS xyzzy zork"
+          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED CHUNK_SIZE 123 DUPLICATE_POLICY max LABELS xyzzy zork"
       end
     end
   end
@@ -123,6 +133,10 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with a duplication policy' do
       specify { expect { ts.add 123, on_duplicate: :sum }.to issue_command "TS.ADD #{key} * 123 ON_DUPLICATE sum" }
+    end
+
+    context 'with a chunk size' do
+      specify { expect { ts.add 123, chunk_size: 456 }.to issue_command "TS.ADD #{key} * 123 CHUNK_SIZE 456" }
     end
 
     it 'returns the added Sample' do
@@ -198,6 +212,10 @@ RSpec.describe Redis::TimeSeries do
     context 'with uncompressed: true' do
       specify { expect { ts.incrby 1, uncompressed: true }.to issue_command "TS.INCRBY #{key} 1 UNCOMPRESSED" }
     end
+
+    context 'with a chunk size' do
+      specify { expect { ts.incrby 1, chunk_size: 456 }.to issue_command "TS.INCRBY #{key} 1 CHUNK_SIZE 456" }
+    end
   end
 
   describe 'TS.DECRBY' do
@@ -209,6 +227,10 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with uncompressed: true' do
       specify { expect { ts.decrby 1, uncompressed: true }.to issue_command "TS.DECRBY #{key} 1 UNCOMPRESSED" }
+    end
+
+    context 'with a chunk size' do
+      specify { expect { ts.decrby 1, chunk_size: 456 }.to issue_command "TS.DECRBY #{key} 1 CHUNK_SIZE 456" }
     end
   end
 
