@@ -297,14 +297,14 @@ RSpec.describe Redis::TimeSeries do
     context 'given an endless range' do
       specify do
         expect { ts.range from.., count: 10 }.to issue_command \
-          "TS.RANGE #{key} - #{msec to} COUNT 10"
+          "TS.RANGE #{key} #{msec from} + COUNT 10"
       end
     end
 
     context 'with a maximum result count' do
       specify do
         expect { ts.range from..to, count: 10 }.to issue_command \
-          "TS.RANGE #{key} #{msec from} + COUNT 10"
+          "TS.RANGE #{key} #{msec from} #{msec to} COUNT 10"
       end
     end
 
