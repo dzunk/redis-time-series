@@ -343,7 +343,7 @@ class Redis
     alias multi_add madd
     alias add_multiple madd
 
-    # Get a range of values from the series
+    # Get a range of values from the series, from earliest to most recent
     #
     # @param range [Hash, Range] a time range, or hash of +from+ and +to+ values
     # @param count [Integer] the maximum number of results to return
@@ -362,7 +362,37 @@ class Redis
         aggregation = range.delete(:aggregation)
         range = range.fetch(:from)..range[:to]
       end
+      # TODO: ensure that the end of the range is greater than the beginning
       cmd('TS.RANGE',
+          key,
+          (range.begin || '-'),
+          (range.end || '+'),
+          (['COUNT', count] if count),
+          Aggregation.parse(aggregation)&.to_a
+         ).map { |ts, val| Sample.new(ts, val) }
+    end
+
+    # Get a range of values from the series, from most recent to earliest
+    #
+    # @param range [Hash, Range] a time range, or hash of +from+ and +to+ values
+    # @param count [Integer] the maximum number of results to return
+    # @param aggregation [Array(<String, Symbol>, Integer), Aggregation]
+    #   The aggregation to apply. Can be an {Aggregation} object, or an array of
+    #   aggregation_type and duration +[:avg, 120000]+
+    #
+    # @return [Array<Sample>] an array of samples matching the range query
+    #
+    # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
+    def revrange(range, count: nil, aggregation: nil)
+      if range.is_a?(Hash)
+        # This is to support from: and to: passed in as hash keys
+        # `range` will swallow all parameters if they're all hash syntax
+        count = range.delete(:count)
+        aggregation = range.delete(:aggregation)
+        range = range.fetch(:from)..range[:to]
+      end
+      # TODO: ensure that the end of the range is greater than the beginning
+      cmd('TS.REVRANGE',
           key,
           (range.begin || '-'),
           (range.end || '+'),

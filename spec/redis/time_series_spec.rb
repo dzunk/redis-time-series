@@ -310,6 +310,52 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
+  describe 'TS.REVRANGE' do
+    specify do
+      expect { ts.revrange from: from, to: to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
+    end
+
+    context 'given a range' do
+      specify do
+        expect { ts.revrange from..to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
+      end
+    end
+
+    context 'given an endless range' do
+      specify do
+        expect { ts.revrange from.., count: 10 }.to issue_command \
+          "TS.REVRANGE #{key} #{msec from} + COUNT 10"
+      end
+    end
+
+    context 'with a maximum result count' do
+      specify do
+        expect { ts.revrange from..to, count: 10 }.to issue_command \
+          "TS.REVRANGE #{key} #{msec from} #{msec to} COUNT 10"
+      end
+    end
+
+    context 'with an aggregation' do
+      specify do
+        expect { ts.revrange from..to, aggregation: [:avg, 60000] }.to issue_command \
+          "TS.REVRANGE #{key} #{msec from} #{msec to} AGGREGATION avg 60000"
+      end
+
+      it 'returns the aggregated results' do
+        (2..6).each { |n| ts.add(n, n.seconds.from_now) }
+        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+      end
+    end
+
+    it 'returns an array of Samples' do
+      values = [2, 4, 6]
+      ts.madd values
+      results = ts.revrange(1.minute.ago..1.minute.from_now)
+      expect(results.size).to eq 3
+      expect(results.map(&:value)).to eq values.reverse
+    end
+  end
+
   describe 'TS.MRANGE' # TODO: class method for querying multiple time-series
 
   describe 'TS.GET' do
