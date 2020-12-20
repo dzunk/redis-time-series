@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Update TS.MADD commands to consolidate parsing (#58)
 
 ## 0.6.0
 * Add CHUNK_SIZE param to CREATE, ADD, INCRBY, DECRBY commands (#53)

@@ -156,33 +156,13 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
-    context 'with an array of values' do
-      let(:time) { Time.now }
-      let(:ts_msec) { time.to_i * 1000 }
-
-      before { travel_to time } # TODO: freeze_time metadata
-      after { travel_back }
-
-      specify do
-        expect { ts.madd [56, 78, 9] }.to issue_command \
-          "TS.MADD #{key} #{ts_msec} 56 #{key} #{ts_msec + 1} 78 #{key} #{ts_msec + 2} 9"
-      end
-    end
-
-    context 'passed values directly' do
+    describe 'with multiple series' do
       let(:time) { Time.now }
       let(:ts_msec) { time.to_i * 1000 }
 
       before { travel_to time }
       after { travel_back }
 
-      specify do
-        expect { ts.madd 1, 2, 3 }.to issue_command \
-          "TS.MADD #{key} #{ts_msec} 1 #{key} #{ts_msec + 1} 2 #{key} #{ts_msec + 2} 3"
-      end
-    end
-
-    describe 'with multiple series' do
       specify do
         expect { described_class.madd(foo: 1, bar: 2, baz: 3) }.to issue_command \
           "TS.MADD foo * 1 bar * 2 baz * 3"
@@ -196,8 +176,9 @@ RSpec.describe Redis::TimeSeries do
 
       specify do
         expect do
-          described_class.madd(foo: [123, 1], bar: [[456, 2], [678, 3]])
-        end.to issue_command "TS.MADD foo 123 1 bar 456 2 bar 678 3"
+          described_class.madd(foo: [1, 2, 3], bar: [4, 5, 6, 7])
+        end.to issue_command "TS.MADD foo #{ts_msec} 1 foo #{ts_msec + 1} 2 foo #{ts_msec + 2} 3 "\
+        "bar #{ts_msec} 4 bar #{ts_msec + 1} 5 bar #{ts_msec + 2} 6 bar #{ts_msec + 3} 7"
       end
     end
   end
@@ -315,7 +296,7 @@ RSpec.describe Redis::TimeSeries do
       end
 
       it 'returns the aggregated results' do
-        ts.madd(2, 3, 4, 5, 6)
+        (2..6).each { |n| ts.add(n, n.seconds.from_now) }
         expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
       end
     end
