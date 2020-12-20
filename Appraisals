@@ -1,7 +1,7 @@
 appraise 'redis 3' do
-  gem 'redis', '3'
+  gem 'redis', '~> 3.3'
 end
 
 appraise 'redis 4' do
-  gem 'redis', '4'
+  gem 'redis', '~> 4.0'
 end
