@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         image_version: ['latest', 'edge']
+        ruby_version: ['2.6', '2.7']
     services:
       redis:
         image: redislabs/redistimeseries:${{ matrix.image_version }}
@@ -28,16 +29,18 @@ jobs:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.6
+        ruby-version: ${{ matrix.ruby_version }}
     - name: Set up CodeClimate
       run: |
         curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
         chmod +x ./cc-test-reporter
         ./cc-test-reporter before-build
     - name: Install dependencies
-      run: bundle install
+      run: |
+        bundle install
+        bundle exec appraisal install
     - name: Run specs
-      run: bundle exec rake spec
+      run: bundle exec appraisal rake spec
     - name: Upload coverage report
       run: ./cc-test-reporter after-build -t simplecov coverage/.resultset.json
     - uses: actions/upload-artifact@v2
