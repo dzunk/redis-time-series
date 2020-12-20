@@ -323,9 +323,19 @@ class Redis
       cmd 'TS.ALTER', key, 'LABELS', val.to_a
     end
 
-    def madd(values)
-      args = self.class.send(:parse_madd_values, key, values)
-      binding.pry
+    # Add multiple values to the series.
+    #
+    # @example Adding multiple values with timestamps
+    #   ts.madd(2.minutes.ago => 987, 1.minute.ago => 654, Time.current => 321)
+    #
+    # @param data [Hash] A hash of key-value pairs, with the key being a Time
+    #   object or integer timestamp, and the value being a single scalar value
+    # @return [Array<Sample, Redis::CommandError>] an array of the resulting samples
+    #   added, or a CommandError if the sample in question could not be added to the
+    #   series
+    #
+    def madd(data)
+      args = self.class.send(:parse_madd_values, key, data)
       cmd('TS.MADD', args).each_with_index.map do |result, idx|
         result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
       end

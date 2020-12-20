@@ -146,26 +146,13 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  fdescribe 'TS.MADD' do
+  describe 'TS.MADD' do
     let(:madd) { ts.madd(values) }
 
     context 'with a hash of timestamps and values' do
       specify do
         expect { ts.madd(1591339859 => 12, 1591339860 => 34) }.to issue_command \
           "TS.MADD #{key} 1591339859 12 #{key} 1591339860 34"
-      end
-    end
-
-    context 'passed values directly' do
-      let(:time) { Time.now }
-      let(:ts_msec) { time.to_i * 1000 }
-
-      before { travel_to time }
-      after { travel_back }
-
-      specify do
-        expect { ts.madd 1, 2, 3 }.to issue_command \
-          "TS.MADD #{key} #{ts_msec} 1 #{key} #{ts_msec + 1} 2 #{key} #{ts_msec + 2} 3"
       end
     end
 
@@ -309,7 +296,7 @@ RSpec.describe Redis::TimeSeries do
       end
 
       it 'returns the aggregated results' do
-        ts.madd(2, 3, 4, 5, 6)
+        (2..6).each { |n| ts.add n }
         expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
       end
     end
