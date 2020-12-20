@@ -345,8 +345,8 @@ class Redis
       end
       cmd('TS.RANGE',
           key,
-          (range.begin || first_timestamp),
-          (range.end || last_timestamp),
+          (range.begin || '-'),
+          (range.end || '+'),
           (['COUNT', count] if count),
           Aggregation.parse(aggregation)&.to_a
          ).map { |ts, val| Sample.new(ts, val) }
