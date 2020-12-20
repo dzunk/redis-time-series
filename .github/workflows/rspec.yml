@@ -36,7 +36,9 @@ jobs:
         chmod +x ./cc-test-reporter
         ./cc-test-reporter before-build
     - name: Install dependencies
-      run: bundle exec appraisal install
+      run: |
+        bundle install
+        bundle exec appraisal install
     - name: Run specs
       run: bundle exec appraisal rake spec
     - name: Upload coverage report
