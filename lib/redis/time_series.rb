@@ -118,6 +118,50 @@ class Redis
       alias multi_add madd
       alias add_multiple madd
 
+      def mrange(range, filter:, count: nil, aggregation: nil, with_labels: false)
+        filters = Filters.new(filter)
+        filters.validate!
+        cmd(
+          'TS.MRANGE',
+          (range.begin || '-'),
+          (range.end || '+'),
+          (['COUNT', count] if count),
+          Aggregation.parse(aggregation)&.to_a,
+          ('WITHLABELS' if with_labels),
+          ['FILTER', filters.to_a]
+        ).then { |response| Multi.new(response) }
+      end
+
+      class Multi < DelegateClass(Array)
+        def initialize(result_array)
+          super(result_array.map do |res|
+            Result.new(
+              TimeSeries.new(res[0]),
+              res[2].map { |s| Sample.new(s[0], s[1]) }
+            )
+          end)
+        end
+
+        def [](index_or_key)
+          return super if index_or_key.is_a?(Integer)
+          find { |result| result.series.key == index_or_key.to_s }&.samples
+        end
+
+        def to_h
+          super do |result|
+            [result.series.key, result.samples.map(&:to_h)]
+          end
+        end
+
+        def sample_count
+          reduce(0) { |size, r| size += r.samples.size }
+        end
+
+        alias series_count size
+
+        Result = Struct.new(:series, :samples)
+      end
+
       # Search for a time series matching the provided filters. Refer to the {Filters} documentation
       # for more details on how to filter.
       #
