@@ -118,48 +118,56 @@ class Redis
       alias multi_add madd
       alias add_multiple madd
 
+      # Query across multiple series, returning values from oldest to newest.
+      #
+      # @param range [Range] A time range over which to query. Beginless and endless ranges
+      #   indicate oldest and most recent timestamp, respectively.
+      # @param filter [Hash, String] a set of filters to query with. Refer to the {Filters}
+      #   documentation for more details on how to filter.
+      # @param count [Integer] The maximum number of results to return for each series.
+      # @param aggregation [Array(<String, Symbol>, Integer), Aggregation]
+      #   The aggregation to apply. Can be an {Aggregation} object, or an array of
+      #   aggregation_type and duration +[:avg, 120000]+
+      # @param with_labels [Boolean] Whether to return the label details of the matched
+      #   series in the result object.
+      # @return [Multi] A multi-series collection of results
+      #
+      # @see https://oss.redislabs.com/redistimeseries/commands/#tsmrangetsmrevrange
       def mrange(range, filter:, count: nil, aggregation: nil, with_labels: false)
-        filters = Filters.new(filter)
-        filters.validate!
-        cmd(
+        multi_cmd(
           'TS.MRANGE',
-          (range.begin || '-'),
-          (range.end || '+'),
-          (['COUNT', count] if count),
-          Aggregation.parse(aggregation)&.to_a,
-          ('WITHLABELS' if with_labels),
-          ['FILTER', filters.to_a]
-        ).then { |response| Multi.new(response) }
+          range,
+          filter: filter,
+          count: count,
+          aggregation: aggregation,
+          with_labels: with_labels
+        )
       end
 
-      class Multi < DelegateClass(Array)
-        def initialize(result_array)
-          super(result_array.map do |res|
-            Result.new(
-              TimeSeries.new(res[0]),
-              res[2].map { |s| Sample.new(s[0], s[1]) }
-            )
-          end)
-        end
-
-        def [](index_or_key)
-          return super if index_or_key.is_a?(Integer)
-          find { |result| result.series.key == index_or_key.to_s }&.samples
-        end
-
-        def to_h
-          super do |result|
-            [result.series.key, result.samples.map(&:to_h)]
-          end
-        end
-
-        def sample_count
-          reduce(0) { |size, r| size += r.samples.size }
-        end
-
-        alias series_count size
-
-        Result = Struct.new(:series, :samples)
+      # Query across multiple series, returning values from newest to oldest.
+      #
+      # @param range [Range] A time range over which to query. Beginless and endless ranges
+      #   indicate oldest and most recent timestamp, respectively.
+      # @param filter [Hash, String] a set of filters to query with. Refer to the {Filters}
+      #   documentation for more details on how to filter.
+      # @param count [Integer] The maximum number of results to return for each series.
+      # @param aggregation [Array(<String, Symbol>, Integer), Aggregation]
+      #   The aggregation to apply. Can be an {Aggregation} object, or an array of
+      #   aggregation_type and duration +[:avg, 120000]+
+      # @param with_labels [Boolean] Whether to return the label details of the matched
+      #   series in the result object.
+      # @return [Multi] A multi-series collection of results
+      #
+      # @see https://oss.redislabs.com/redistimeseries/commands/#tsmrangetsmrevrange
+      def mrevrange(range, filter:, count: nil, aggregation: nil, with_labels: false)
+        multi_cmd(
+          'TS.MREVRANGE',
+          range,
+          filter: filter,
+          count: count,
+          aggregation: aggregation,
+          with_labels: with_labels
+        )
       end
 
       # Search for a time series matching the provided filters. Refer to the {Filters} documentation
@@ -186,6 +194,20 @@ class Redis
       alias where query_index
 
       private
+
+      def multi_cmd(cmd_name, range, filter:, count:, aggregation:, with_labels:)
+        filters = Filters.new(filter)
+        filters.validate!
+        cmd(
+          cmd_name,
+          (range.begin || '-'),
+          (range.end || '+'),
+          (['COUNT', count] if count),
+          Aggregation.parse(aggregation)&.to_a,
+          ('WITHLABELS' if with_labels),
+          ['FILTER', filters.to_a]
+        ).then { |response| Multi.new(response) }
+      end
 
       def key_for(series_or_string)
         series_or_string.is_a?(self) ? series_or_string.key : series_or_string.to_s
