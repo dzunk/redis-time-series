@@ -134,14 +134,7 @@ class Redis
       #
       # @see https://oss.redislabs.com/redistimeseries/commands/#tsmrangetsmrevrange
       def mrange(range, filter:, count: nil, aggregation: nil, with_labels: false)
-        multi_cmd(
-          'TS.MRANGE',
-          range,
-          filter: filter,
-          count: count,
-          aggregation: aggregation,
-          with_labels: with_labels
-        )
+        multi_cmd('TS.MRANGE', range, filter, count, aggregation, with_labels)
       end
 
       # Query across multiple series, returning values from newest to oldest.
@@ -160,14 +153,7 @@ class Redis
       #
       # @see https://oss.redislabs.com/redistimeseries/commands/#tsmrangetsmrevrange
       def mrevrange(range, filter:, count: nil, aggregation: nil, with_labels: false)
-        multi_cmd(
-          'TS.MREVRANGE',
-          range,
-          filter: filter,
-          count: count,
-          aggregation: aggregation,
-          with_labels: with_labels
-        )
+        multi_cmd('TS.MREVRANGE', range, filter, count, aggregation, with_labels)
       end
 
       # Search for a time series matching the provided filters. Refer to the {Filters} documentation
@@ -195,7 +181,7 @@ class Redis
 
       private
 
-      def multi_cmd(cmd_name, range, filter:, count:, aggregation:, with_labels:)
+      def multi_cmd(cmd_name, range, filter, count, agg, with_labels)
         filters = Filters.new(filter)
         filters.validate!
         cmd(
@@ -203,7 +189,7 @@ class Redis
           (range.begin || '-'),
           (range.end || '+'),
           (['COUNT', count] if count),
-          Aggregation.parse(aggregation)&.to_a,
+          Aggregation.parse(agg)&.to_a,
           ('WITHLABELS' if with_labels),
           ['FILTER', filters.to_a]
         ).then { |response| Multi.new(response) }
@@ -422,13 +408,7 @@ class Redis
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
     def range(range, count: nil, aggregation: nil)
-      cmd('TS.RANGE',
-          key,
-          (range.begin || '-'),
-          (range.end || '+'),
-          (['COUNT', count] if count),
-          Aggregation.parse(aggregation)&.to_a
-         ).map { |ts, val| Sample.new(ts, val) }
+      range_cmd('TS.RANGE', range, count, aggregation)
     end
 
     # Get a range of values from the series, from most recent to earliest
@@ -444,13 +424,7 @@ class Redis
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
     def revrange(range, count: nil, aggregation: nil)
-      cmd('TS.REVRANGE',
-          key,
-          (range.begin || '-'),
-          (range.end || '+'),
-          (['COUNT', count] if count),
-          Aggregation.parse(aggregation)&.to_a
-         ).map { |ts, val| Sample.new(ts, val) }
+      range_cmd('TS.REVRANGE', range, count, aggregation)
     end
 
     # Set data retention time for the series using +TS.ALTER+
@@ -469,6 +443,18 @@ class Redis
     def ==(other)
       return false unless other.is_a?(self.class)
       key == other.key && redis == other.redis
+    end
+
+    private
+
+    def range_cmd(cmd_name, range, count, agg)
+      cmd(cmd_name,
+          key,
+          (range.begin || '-'),
+          (range.end || '+'),
+          (['COUNT', count] if count),
+          Aggregation.parse(agg)&.to_a
+         ).map { |ts, val| Sample.new(ts, val) }
     end
   end
 end
