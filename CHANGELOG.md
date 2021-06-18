@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Add TS.REVRANGE, TS.MRANGE, and TS.MREVRANGE commands (#19)
 * Update TS.MADD commands to consolidate parsing (#58)
 
 ## 0.6.0
