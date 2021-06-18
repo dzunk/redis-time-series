@@ -266,13 +266,7 @@ RSpec.describe Redis::TimeSeries do
 
   describe 'TS.RANGE' do
     specify do
-      expect { ts.range from: from, to: to }.to issue_command "TS.RANGE #{key} #{msec from} #{msec to}"
-    end
-
-    context 'given a range' do
-      specify do
-        expect { ts.range from..to }.to issue_command "TS.RANGE #{key} #{msec from} #{msec to}"
-      end
+      expect { ts.range from..to }.to issue_command "TS.RANGE #{key} #{msec from} #{msec to}"
     end
 
     context 'given an endless range' do
@@ -312,13 +306,7 @@ RSpec.describe Redis::TimeSeries do
 
   describe 'TS.REVRANGE' do
     specify do
-      expect { ts.revrange from: from, to: to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
-    end
-
-    context 'given a range' do
-      specify do
-        expect { ts.revrange from..to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
-      end
+      expect { ts.revrange from..to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
     end
 
     context 'given an endless range' do
@@ -356,7 +344,101 @@ RSpec.describe Redis::TimeSeries do
     end
   end
 
-  describe 'TS.MRANGE' # TODO: class method for querying multiple time-series
+  describe 'TS.REVRANGE' do
+    specify do
+      expect { ts.revrange from..to }.to issue_command "TS.REVRANGE #{key} #{msec from} #{msec to}"
+    end
+
+    context 'given an endless range' do
+      specify do
+        expect { ts.revrange from.., count: 10 }.to issue_command \
+          "TS.REVRANGE #{key} #{msec from} + COUNT 10"
+      end
+    end
+
+    context 'with a maximum result count' do
+      specify do
+        expect { ts.revrange from..to, count: 10 }.to issue_command \
+          "TS.REVRANGE #{key} #{msec from} #{msec to} COUNT 10"
+      end
+    end
+
+    context 'with an aggregation' do
+      specify do
+        expect { ts.revrange from..to, aggregation: [:avg, 60000] }.to issue_command \
+          "TS.REVRANGE #{key} #{msec from} #{msec to} AGGREGATION avg 60000"
+      end
+
+      it 'returns the aggregated results' do
+        (2..6).each { |n| ts.add(n, n.seconds.from_now) }
+        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+      end
+    end
+
+    it 'returns an array of Samples' do
+      values = [2, 4, 6]
+      ts.madd values
+      results = ts.revrange(1.minute.ago..1.minute.from_now)
+      expect(results.size).to eq 3
+      expect(results.map(&:value)).to eq values.reverse
+    end
+  end
+
+  describe 'TS.MRANGE' do
+    specify do
+      expect { described_class.mrange(123..456, filter: { foo: 'bar' }) }
+        .to issue_command "TS.MRANGE 123 456 FILTER foo=bar"
+    end
+
+    context 'with all options' do
+      specify do
+        expect { described_class.mrange(123..456, filter: { foo: 'bar' }, count: 7, aggregation: [:avg, 89], with_labels: true) }
+          .to issue_command 'TS.MRANGE 123 456 COUNT 7 AGGREGATION avg 89 WITHLABELS FILTER foo=bar'
+      end
+    end
+  end
+
+  describe 'TS.MREVRANGE' do
+  end
+
+  context 'mutli-series queries' do
+    let(:mrange) { described_class.mrange(100..300, filter: { foo: 'bar' }) }
+    let(:mrevrange) { described_class.mrevrange(100..300, filter: { foo: 'bar' }) }
+
+    before do
+      ts1 = described_class.create 'ts1', labels: { foo: 'bar' }
+      ts2 = described_class.create 'ts2', labels: { foo: 'bar' }
+      ts1.madd(200 => 4, 201 => 5, 202 => 6)
+      ts2.madd(203 => 7, 204 => 8, 205 => 9)
+    end
+
+    after do
+      Redis.current.del 'ts1'
+      Redis.current.del 'ts2'
+    end
+
+    describe 'mrange' do
+      let(:result) { mrange }
+
+      it 'returns a Multi result' do
+        expect(result).to be_a Redis::TimeSeries::Multi
+        expect(result.keys).to contain_exactly 'ts1', 'ts2'
+        expect(result[0].values).to eq [4, 5, 6]
+        expect(result[1].values).to eq [7, 8, 9]
+      end
+    end
+
+    describe 'mrevrange' do
+      let(:result) { mrevrange }
+
+      it 'returns a Multi result' do
+        expect(result).to be_a Redis::TimeSeries::Multi
+        expect(result.keys).to contain_exactly 'ts1', 'ts2'
+        expect(result[0].values).to eq [6, 5, 4]
+        expect(result[1].values).to eq [9, 8, 7]
+      end
+    end
+  end
 
   describe 'TS.GET' do
     specify { expect { ts.get }.to issue_command "TS.GET #{key}" }

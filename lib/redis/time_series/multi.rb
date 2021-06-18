@@ -62,7 +62,11 @@ class Redis
         reduce(0) { |size, r| size += r.samples.size }
       end
 
-      Result = Struct.new(:series, :labels, :samples)
+      Result = Struct.new(:series, :labels, :samples) do
+        def values
+          samples.map(&:value)
+        end
+      end
     end
   end
 end

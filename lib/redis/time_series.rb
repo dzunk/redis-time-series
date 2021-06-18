@@ -411,7 +411,8 @@ class Redis
 
     # Get a range of values from the series, from earliest to most recent
     #
-    # @param range [Hash, Range] a time range, or hash of +from+ and +to+ values
+    # @param range [Range] A time range over which to query. Beginless and endless ranges
+    #   indicate oldest and most recent timestamp, respectively.
     # @param count [Integer] the maximum number of results to return
     # @param aggregation [Array(<String, Symbol>, Integer), Aggregation]
     #   The aggregation to apply. Can be an {Aggregation} object, or an array of
@@ -421,14 +422,6 @@ class Redis
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
     def range(range, count: nil, aggregation: nil)
-      if range.is_a?(Hash)
-        # This is to support from: and to: passed in as hash keys
-        # `range` will swallow all parameters if they're all hash syntax
-        count = range.delete(:count)
-        aggregation = range.delete(:aggregation)
-        range = range.fetch(:from)..range[:to]
-      end
-      # TODO: ensure that the end of the range is greater than the beginning
       cmd('TS.RANGE',
           key,
           (range.begin || '-'),
@@ -440,7 +433,8 @@ class Redis
 
     # Get a range of values from the series, from most recent to earliest
     #
-    # @param range [Hash, Range] a time range, or hash of +from+ and +to+ values
+    # @param range [Range] A time range over which to query. Beginless and endless ranges
+    #   indicate oldest and most recent timestamp, respectively.
     # @param count [Integer] the maximum number of results to return
     # @param aggregation [Array(<String, Symbol>, Integer), Aggregation]
     #   The aggregation to apply. Can be an {Aggregation} object, or an array of
@@ -450,14 +444,6 @@ class Redis
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
     def revrange(range, count: nil, aggregation: nil)
-      if range.is_a?(Hash)
-        # This is to support from: and to: passed in as hash keys
-        # `range` will swallow all parameters if they're all hash syntax
-        count = range.delete(:count)
-        aggregation = range.delete(:aggregation)
-        range = range.fetch(:from)..range[:to]
-      end
-      # TODO: ensure that the end of the range is greater than the beginning
       cmd('TS.REVRANGE',
           key,
           (range.begin || '-'),
