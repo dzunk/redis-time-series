@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Relax Redis version constraint (#62)
 * Add TS.REVRANGE, TS.MRANGE, and TS.MREVRANGE commands (#19)
 * Update TS.MADD commands to consolidate parsing (#58)
 
