@@ -213,6 +213,38 @@ Redis::TimeSeries.where('foo=bar')
   @retention=nil,
   @uncompressed=false>]
 ```
+
+### Querying Multiple Series
+Get all samples from matching series over a time range with `mrange`
+```ruby
+[4] pry(main)> result = Redis::TimeSeries.mrange(1.minute.ago.., filter: { foo: 'bar' })
+=> [#<struct Redis::TimeSeries::Multi::Result
+  series=
+   #<Redis::TimeSeries:0x00007f833e408ad0
+    @key="ts3",
+    @redis=#<Redis client v4.2.5 for redis://127.0.0.1:6379/0>>,
+  labels=[],
+  samples=
+   [#<Redis::TimeSeries::Sample:0x00007f833e408a58
+     @time=2021-06-17 20:58:33 3246391/4194304 -0700,
+     @value=0.1e1>,
+    #<Redis::TimeSeries::Sample:0x00007f833e408850
+     @time=2021-06-17 20:58:33 413139/524288 -0700,
+     @value=0.3e1>,
+    #<Redis::TimeSeries::Sample:0x00007f833e408670
+     @time=2021-06-17 20:58:33 1679819/2097152 -0700,
+     @value=0.2e1>]>]
+[5] pry(main)> result.keys
+=> ["ts3"]
+[6] pry(main)> result['ts3'].values
+=> [0.1e1, 0.3e1, 0.2e1]
+```
+Order them from newest to oldest with `mrevrange`
+```ruby
+[8] pry(main)> Redis::TimeSeries.mrevrange(1.minute.ago.., filter: { foo: 'bar' }).first.values
+=> [0.2e1, 0.3e1, 0.1e1]
+```
+
 ### Filter DSL
 You can provide filter strings directly, per the time series documentation.
 ```ruby
@@ -299,11 +331,8 @@ ts.rules.first.delete
 Redis::TimeSeries.delete_rule(source: ts, dest: 'other_ts')
 ```
 
-
 ### TODO
-* `TS.REVRANGE`
-* `TS.MRANGE`/`TS.MREVRANGE`
-* Probably a bunch more stuff
+* Check the [open issues](https://github.com/dzunk/redis-time-series/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) on Github.
 
 ## Development
 
