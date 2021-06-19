@@ -11,6 +11,7 @@ require 'redis/time_series/multi'
 require 'redis/time_series/rule'
 require 'redis/time_series/info'
 require 'redis/time_series/sample'
+require 'redis/time_series/samples'
 require 'redis/time_series'
 
 class RedisTimeSeries; end
