@@ -291,7 +291,7 @@ RSpec.describe Redis::TimeSeries do
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+        expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to eq 4
       end
     end
 
@@ -331,7 +331,7 @@ RSpec.describe Redis::TimeSeries do
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to eq 4
       end
     end
 
@@ -371,7 +371,7 @@ RSpec.describe Redis::TimeSeries do
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to eq 4
       end
     end
 
