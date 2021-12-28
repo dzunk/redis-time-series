@@ -24,7 +24,7 @@ ts.add 56
 => #<Redis::TimeSeries::Sample:0x00007f8c0d26c460 @time=2020-06-25 23:23:16 -0700, @value=0.56e2>
 ts.add 78
 => #<Redis::TimeSeries::Sample:0x00007f8c0d276618 @time=2020-06-25 23:23:20 -0700, @value=0.78e2>
-ts.range (Time.now.to_i - 100)..Time.now.to_i
+ts.range (Time.now.to_i - 100)..Time.now.to_i * 1000
 => [#<Redis::TimeSeries::Sample:0x00007f8c0d297200 @time=2020-06-25 23:23:04 -0700, @value=0.1234e4>,
  #<Redis::TimeSeries::Sample:0x00007f8c0d297048 @time=2020-06-25 23:23:16 -0700, @value=0.56e2>,
  #<Redis::TimeSeries::Sample:0x00007f8c0d296e90 @time=2020-06-25 23:23:20 -0700, @value=0.78e2>]
