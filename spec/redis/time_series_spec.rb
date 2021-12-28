@@ -48,10 +48,10 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      let(:options) { { chunk_size: 123 } }
+      let(:options) { { chunk_size: 1024 } }
 
       specify do
-        expect { create }.to issue_command "TS.CREATE #{key} CHUNK_SIZE 123"
+        expect { create }.to issue_command "TS.CREATE #{key} CHUNK_SIZE 1024"
       end
     end
 
@@ -83,13 +83,13 @@ RSpec.describe Redis::TimeSeries do
           uncompressed: true,
           labels: { xyzzy: 'zork' },
           duplicate_policy: :max,
-          chunk_size: 123
+          chunk_size: 1024
         }
       end
 
       specify do
         expect { create }.to issue_command \
-          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED CHUNK_SIZE 123 DUPLICATE_POLICY max LABELS xyzzy zork"
+          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED CHUNK_SIZE 1024 DUPLICATE_POLICY max LABELS xyzzy zork"
       end
     end
   end
@@ -136,7 +136,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.add 123, chunk_size: 456 }.to issue_command "TS.ADD #{key} * 123 CHUNK_SIZE 456" }
+      specify { expect { ts.add 123, chunk_size: 1024 }.to issue_command "TS.ADD #{key} * 123 CHUNK_SIZE 1024" }
     end
 
     it 'returns the added Sample' do
@@ -195,7 +195,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.incrby 1, chunk_size: 456 }.to issue_command "TS.INCRBY #{key} 1 CHUNK_SIZE 456" }
+      specify { expect { ts.incrby 1, chunk_size: 2048 }.to issue_command "TS.INCRBY #{key} 1 CHUNK_SIZE 2048" }
     end
   end
 
@@ -211,7 +211,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.decrby 1, chunk_size: 456 }.to issue_command "TS.DECRBY #{key} 1 CHUNK_SIZE 456" }
+      specify { expect { ts.decrby 1, chunk_size: 512 }.to issue_command "TS.DECRBY #{key} 1 CHUNK_SIZE 512" }
     end
   end
 
