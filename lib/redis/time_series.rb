@@ -41,7 +41,8 @@ class Redis
       #   A duplication policy to resolve conflicts when adding values to the series.
       #   Valid values are in Redis::TimeSeries::DuplicatePolicy::VALID_POLICIES
       # @option options [Integer] :chunk_size
-      #   Amount of memory, in bytes, to allocate for each chunk of data
+      #   Amount of memory, in bytes, to allocate for each chunk of data. Must be a multiple
+      #   of 8. Default for a series is 4096.
       #
       # @return [Redis::TimeSeries] the created time series
       # @see https://oss.redislabs.com/redistimeseries/commands/#tscreate
