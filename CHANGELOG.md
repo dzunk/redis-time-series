@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.7.0
 * Add Ruby 3.1 to build matrix (#70)
 * Add Ruby 3.0 to build matrix (#63)
 * Relax Redis version constraint (#62)
