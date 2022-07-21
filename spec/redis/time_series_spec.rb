@@ -123,6 +123,14 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
+    context 'with an ActiveSupport::TimeWithZone' do
+      let(:time) { ActiveSupport::TimeWithZone.new(Time.now, TZInfo::Timezone.get('Etc/UTC')) }
+
+      specify do
+        expect { ts.add 123, time }.to issue_command "TS.ADD #{key} #{time.strftime("%s%L")} 123"
+      end
+    end
+
     context 'with an invalid value' do
       specify { expect { ts.add 'bar' }.to raise_error Redis::CommandError }
     end
