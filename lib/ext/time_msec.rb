@@ -26,4 +26,12 @@ module TimeMsec
       at(timestamp / 1000.0)
     end
   end
+
+  if defined?(ActiveSupport::TimeWithZone)
+    refine ActiveSupport::TimeWithZone do
+      def ts_msec
+        utc.ts_msec
+      end
+    end
+  end
 end

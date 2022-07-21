@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Handle ActiveSupport::TimeWithZone objects (#75)
 
 ## 0.7.0
 * Add Ruby 3.1 to build matrix (#70)
