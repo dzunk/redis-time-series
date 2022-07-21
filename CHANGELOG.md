@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.7.1
 * Handle ActiveSupport::TimeWithZone objects (#75)
 
 ## 0.7.0
