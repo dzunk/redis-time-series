@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.7.2
 * Fix sample building for TS.MADD with multiple series (#77)
 
 ## 0.7.1
