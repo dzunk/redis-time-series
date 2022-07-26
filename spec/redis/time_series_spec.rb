@@ -7,7 +7,7 @@ RSpec.describe Redis::TimeSeries do
   let(:from) { Time.at(time) }
   let(:to) { Time.at(time) + 120 }
 
-  after { Redis.current.del key }
+  after { redis.del key }
 
   def msec(ts)
     (ts.to_f * 1000).to_i
@@ -429,8 +429,8 @@ RSpec.describe Redis::TimeSeries do
     end
 
     after do
-      Redis.current.del 'ts1'
-      Redis.current.del 'ts2'
+      redis.del 'ts1'
+      redis.del 'ts2'
     end
 
     describe 'mrange' do
@@ -526,8 +526,8 @@ RSpec.describe Redis::TimeSeries do
     end
 
     after do
-      Redis.current.del 'good'
-      Redis.current.del 'bad'
+      redis.del 'good'
+      redis.del 'bad'
     end
 
     specify { expect { result }.to issue_command 'TS.QUERYINDEX foo=bar' }
@@ -566,25 +566,25 @@ RSpec.describe Redis::TimeSeries do
   end
 
   describe 'equality' do
-    let(:other_ts) { described_class.new(other_key, redis: redis) }
+    let(:other_ts) { described_class.new(other_key, redis: other_redis) }
 
     context 'when key and client match' do
       let(:other_key) { ts.key }
-      let(:redis) { ts.redis }
+      let(:other_redis) { ts.redis }
 
       it { is_expected.to eq other_ts }
     end
 
     context 'when key does not match' do
       let(:other_key) { 'other_key' }
-      let(:redis) { ts.redis }
+      let(:other_redis) { ts.redis }
 
       it { is_expected.not_to eq other_ts }
     end
 
     context 'when client does not match' do
       let(:other_key) { ts.key }
-      let(:redis) { Redis.new }
+      let(:other_redis) { Redis.new }
 
       it { is_expected.not_to eq other_ts }
     end

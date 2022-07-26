@@ -10,7 +10,7 @@ require 'active_support/core_ext/numeric/time'
 require 'redis'
 require 'redis-time-series'
 
-Redis.current.flushall
+Redis.new.flushall
 ts1 = Redis::TimeSeries.create('ts1')
 ts2 = Redis::TimeSeries.create('ts2')
 ts3 = Redis::TimeSeries.create('ts3')
