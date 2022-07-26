@@ -188,6 +188,14 @@ RSpec.describe Redis::TimeSeries do
         end.to issue_command "TS.MADD foo #{ts_msec} 1 foo #{ts_msec + 1} 2 foo #{ts_msec + 2} 3 "\
         "bar #{ts_msec} 4 bar #{ts_msec + 1} 5 bar #{ts_msec + 2} 6 bar #{ts_msec + 3} 7"
       end
+
+      it 'correctly returns samples' do
+        described_class.create(:foo)
+        expect(described_class.madd(foo: { 123 => 1, 456 => 2 })).to all(
+          be_a(Redis::TimeSeries::Sample)
+        )
+        described_class.destroy(:foo)
+      end
     end
   end
 
