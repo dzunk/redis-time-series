@@ -42,9 +42,9 @@ class Redis
         @debug = !!bool
       end
 
-      # @return [Redis] the current Redis client. Defaults to +Redis.current+
+      # @return [Redis] the current Redis client. Defaults to +Redis.new+
       def redis
-        @redis ||= Redis.current
+        @redis ||= Redis.new
       end
 
       # Set the default Redis client for time series objects.

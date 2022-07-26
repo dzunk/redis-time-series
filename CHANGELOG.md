@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Remove usage of `Redis.current` (#78)
 
 ## 0.7.2
 * Fix sample building for TS.MADD with multiple series (#77)
