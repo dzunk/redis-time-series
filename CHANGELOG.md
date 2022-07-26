@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Fix sample building for TS.MADD with multiple series (#76)
 
 ## 0.7.1
 * Handle ActiveSupport::TimeWithZone objects (#75)

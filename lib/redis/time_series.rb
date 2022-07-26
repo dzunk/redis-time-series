@@ -108,7 +108,7 @@ class Redis
       #
       def madd(data)
         data.reduce([]) do |memo, (key, value)|
-          memo << parse_madd_values(key, value)
+          memo += parse_madd_values(key, value)
           memo
         end.then do |args|
           cmd('TS.MADD', args).each_with_index.map do |result, idx|
