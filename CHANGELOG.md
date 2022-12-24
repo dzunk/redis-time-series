@@ -2,6 +2,7 @@
 
 ## Unreleased
 * Remove usage of `Redis.current` (#78)
+* Fix flaky aggregation spec (#80)
 
 ## 0.7.2
 * Fix sample building for TS.MADD with multiple series (#77)
