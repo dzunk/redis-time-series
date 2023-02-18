@@ -168,8 +168,15 @@ RSpec.describe Redis::TimeSeries do
       let(:time) { Time.now }
       let(:ts_msec) { time.to_i * 1000 }
 
-      before { travel_to time }
-      after { travel_back }
+      before do
+        %i[foo bar baz].each { |key| described_class.create(key) }
+        travel_to time
+      end
+
+      after do
+        %i[foo bar baz].each { |key| described_class.destroy(key) }
+        travel_back
+      end
 
       specify do
         expect { described_class.madd(foo: 1, bar: 2, baz: 3) }.to issue_command \
@@ -190,11 +197,9 @@ RSpec.describe Redis::TimeSeries do
       end
 
       it 'correctly returns samples' do
-        described_class.create(:foo)
         expect(described_class.madd(foo: { 123 => 1, 456 => 2 })).to all(
           be_a(Redis::TimeSeries::Sample)
         )
-        described_class.destroy(:foo)
       end
     end
   end

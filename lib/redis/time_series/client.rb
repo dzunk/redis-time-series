@@ -68,7 +68,7 @@ class Redis
       end
 
       def cmd_with_redis(redis, name, *args)
-        args = args.flatten.compact.map { |arg| arg.is_a?(Time) ? arg.ts_msec : arg }
+        args = args.flatten.compact.map { |arg| arg.is_a?(Time) ? arg.ts_msec : arg.to_s }
         puts "DEBUG: #{name} #{args.join(' ')}" if debug
         redis.call name, args
       end
