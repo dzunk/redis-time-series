@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.8.0
 * Remove usage of `Redis.current` (#78)
 * Fix flaky aggregation spec (#80)
 * Compatibility updates and spec fixes (#81)
