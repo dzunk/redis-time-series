@@ -214,7 +214,7 @@ class Redis
           end
         else
           # single value, no timestamp
-          [key, '*', raw]
+          [[key, '*', raw]]
         end
       end
     end
