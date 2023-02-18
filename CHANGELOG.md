@@ -3,6 +3,8 @@
 ## Unreleased
 * Remove usage of `Redis.current` (#78)
 * Fix flaky aggregation spec (#80)
+* Compatibility updates and spec fixes (#81)
+* Add redis-rb 5.x to appraisals (#83)
 
 ## 0.7.2
 * Fix sample building for TS.MADD with multiple series (#77)
