@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+* Add Ruby 3.2 to build matrix (#82)
 
 ## 0.8.0
 * Remove usage of `Redis.current` (#78)
