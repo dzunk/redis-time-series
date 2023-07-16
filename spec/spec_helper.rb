@@ -8,6 +8,12 @@ require 'pry'
 require 'redis'
 require 'redis-time-series'
 
+module RedisHelpers
+  def redis
+    @redis ||= Redis.new
+  end
+end
+
 RSpec.configure do |config|
   config.disable_monkey_patching!
   config.example_status_persistence_file_path = '.rspec_status'
@@ -17,9 +23,11 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.include RedisHelpers
   config.include ActiveSupport::Testing::TimeHelpers
 
-  config.before(:suite) { Redis.current.flushdb }
+  config.before(:suite) { Redis.new.flushdb }
+  config.before { Redis::TimeSeries.redis = redis }
 end
 
 RSpec::Matchers.define :issue_command do |expected|
@@ -27,7 +35,7 @@ RSpec::Matchers.define :issue_command do |expected|
 
   match do |actual|
     @commands = []
-    allow(Redis.current).to receive(:call).and_wrap_original do |redis, *args|
+    allow(redis).to receive(:call).and_wrap_original do |redis, *args|
       @commands << args.join(' ')
       redis.call(*args)
     end

@@ -7,7 +7,7 @@ RSpec.describe Redis::TimeSeries do
   let(:from) { Time.at(time) }
   let(:to) { Time.at(time) + 120 }
 
-  after { Redis.current.del key }
+  after { redis.del key }
 
   def msec(ts)
     (ts.to_f * 1000).to_i
@@ -48,10 +48,10 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      let(:options) { { chunk_size: 123 } }
+      let(:options) { { chunk_size: 1024 } }
 
       specify do
-        expect { create }.to issue_command "TS.CREATE #{key} CHUNK_SIZE 123"
+        expect { create }.to issue_command "TS.CREATE #{key} CHUNK_SIZE 1024"
       end
     end
 
@@ -83,13 +83,13 @@ RSpec.describe Redis::TimeSeries do
           uncompressed: true,
           labels: { xyzzy: 'zork' },
           duplicate_policy: :max,
-          chunk_size: 123
+          chunk_size: 1024
         }
       end
 
       specify do
         expect { create }.to issue_command \
-          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED CHUNK_SIZE 123 DUPLICATE_POLICY max LABELS xyzzy zork"
+          "TS.CREATE #{key} RETENTION 5678 UNCOMPRESSED CHUNK_SIZE 1024 DUPLICATE_POLICY max LABELS xyzzy zork"
       end
     end
   end
@@ -123,6 +123,14 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
+    context 'with an ActiveSupport::TimeWithZone' do
+      let(:time) { ActiveSupport::TimeWithZone.new(Time.now, TZInfo::Timezone.get('Etc/UTC')) }
+
+      specify do
+        expect { ts.add 123, time }.to issue_command "TS.ADD #{key} #{time.strftime("%s%L")} 123"
+      end
+    end
+
     context 'with an invalid value' do
       specify { expect { ts.add 'bar' }.to raise_error Redis::CommandError }
     end
@@ -136,7 +144,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.add 123, chunk_size: 456 }.to issue_command "TS.ADD #{key} * 123 CHUNK_SIZE 456" }
+      specify { expect { ts.add 123, chunk_size: 1024 }.to issue_command "TS.ADD #{key} * 123 CHUNK_SIZE 1024" }
     end
 
     it 'returns the added Sample' do
@@ -160,8 +168,15 @@ RSpec.describe Redis::TimeSeries do
       let(:time) { Time.now }
       let(:ts_msec) { time.to_i * 1000 }
 
-      before { travel_to time }
-      after { travel_back }
+      before do
+        %i[foo bar baz].each { |key| described_class.create(key) }
+        travel_to time
+      end
+
+      after do
+        %i[foo bar baz].each { |key| described_class.destroy(key) }
+        travel_back
+      end
 
       specify do
         expect { described_class.madd(foo: 1, bar: 2, baz: 3) }.to issue_command \
@@ -180,6 +195,12 @@ RSpec.describe Redis::TimeSeries do
         end.to issue_command "TS.MADD foo #{ts_msec} 1 foo #{ts_msec + 1} 2 foo #{ts_msec + 2} 3 "\
         "bar #{ts_msec} 4 bar #{ts_msec + 1} 5 bar #{ts_msec + 2} 6 bar #{ts_msec + 3} 7"
       end
+
+      it 'correctly returns samples' do
+        expect(described_class.madd(foo: { 123 => 1, 456 => 2 })).to all(
+          be_a(Redis::TimeSeries::Sample)
+        )
+      end
     end
   end
 
@@ -195,7 +216,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.incrby 1, chunk_size: 456 }.to issue_command "TS.INCRBY #{key} 1 CHUNK_SIZE 456" }
+      specify { expect { ts.incrby 1, chunk_size: 2048 }.to issue_command "TS.INCRBY #{key} 1 CHUNK_SIZE 2048" }
     end
   end
 
@@ -211,7 +232,7 @@ RSpec.describe Redis::TimeSeries do
     end
 
     context 'with a chunk size' do
-      specify { expect { ts.decrby 1, chunk_size: 456 }.to issue_command "TS.DECRBY #{key} 1 CHUNK_SIZE 456" }
+      specify { expect { ts.decrby 1, chunk_size: 512 }.to issue_command "TS.DECRBY #{key} 1 CHUNK_SIZE 512" }
     end
   end
 
@@ -291,7 +312,7 @@ RSpec.describe Redis::TimeSeries do
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+        expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to be_a BigDecimal
       end
     end
 
@@ -331,7 +352,7 @@ RSpec.describe Redis::TimeSeries do
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to be_a BigDecimal
       end
     end
 
@@ -371,7 +392,7 @@ RSpec.describe Redis::TimeSeries do
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 60000]).first.value).to eq 4
+        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to be_a BigDecimal
       end
     end
 
@@ -413,8 +434,8 @@ RSpec.describe Redis::TimeSeries do
     end
 
     after do
-      Redis.current.del 'ts1'
-      Redis.current.del 'ts2'
+      redis.del 'ts1'
+      redis.del 'ts2'
     end
 
     describe 'mrange' do
@@ -510,8 +531,8 @@ RSpec.describe Redis::TimeSeries do
     end
 
     after do
-      Redis.current.del 'good'
-      Redis.current.del 'bad'
+      redis.del 'good'
+      redis.del 'bad'
     end
 
     specify { expect { result }.to issue_command 'TS.QUERYINDEX foo=bar' }
@@ -550,25 +571,25 @@ RSpec.describe Redis::TimeSeries do
   end
 
   describe 'equality' do
-    let(:other_ts) { described_class.new(other_key, redis: redis) }
+    let(:other_ts) { described_class.new(other_key, redis: other_redis) }
 
     context 'when key and client match' do
       let(:other_key) { ts.key }
-      let(:redis) { ts.redis }
+      let(:other_redis) { ts.redis }
 
       it { is_expected.to eq other_ts }
     end
 
     context 'when key does not match' do
       let(:other_key) { 'other_key' }
-      let(:redis) { ts.redis }
+      let(:other_redis) { ts.redis }
 
       it { is_expected.not_to eq other_ts }
     end
 
     context 'when client does not match' do
       let(:other_key) { ts.key }
-      let(:redis) { Redis.new }
+      let(:other_redis) { Redis.new }
 
       it { is_expected.not_to eq other_ts }
     end

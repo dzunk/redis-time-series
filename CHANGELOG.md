@@ -1,6 +1,22 @@
 # Changelog
 
 ## Unreleased
+* Add Ruby 3.2 to build matrix (#82)
+
+## 0.8.0
+* Remove usage of `Redis.current` (#78)
+* Fix flaky aggregation spec (#80)
+* Compatibility updates and spec fixes (#81)
+* Add redis-rb 5.x to appraisals (#83)
+
+## 0.7.2
+* Fix sample building for TS.MADD with multiple series (#77)
+
+## 0.7.1
+* Handle ActiveSupport::TimeWithZone objects (#75)
+
+## 0.7.0
+* Add Ruby 3.1 to build matrix (#70)
 * Add Ruby 3.0 to build matrix (#63)
 * Relax Redis version constraint (#62)
 * Add TS.REVRANGE, TS.MRANGE, and TS.MREVRANGE commands (#19)

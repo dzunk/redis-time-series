@@ -24,7 +24,7 @@ ts.add 56
 => #<Redis::TimeSeries::Sample:0x00007f8c0d26c460 @time=2020-06-25 23:23:16 -0700, @value=0.56e2>
 ts.add 78
 => #<Redis::TimeSeries::Sample:0x00007f8c0d276618 @time=2020-06-25 23:23:20 -0700, @value=0.78e2>
-ts.range (Time.now.to_i - 100)..Time.now.to_i
+ts.range (Time.now.to_i - 100)..Time.now.to_i * 1000
 => [#<Redis::TimeSeries::Sample:0x00007f8c0d297200 @time=2020-06-25 23:23:04 -0700, @value=0.1234e4>,
  #<Redis::TimeSeries::Sample:0x00007f8c0d297048 @time=2020-06-25 23:23:16 -0700, @value=0.56e2>,
  #<Redis::TimeSeries::Sample:0x00007f8c0d296e90 @time=2020-06-25 23:23:20 -0700, @value=0.78e2>]
@@ -50,6 +50,12 @@ Or install it yourself as:
 
 Check out the Redis Time Series [command documentation](https://oss.redislabs.com/redistimeseries/master/commands/) first. Should be able to do most of that.
 
+### Configuring
+You can set the default Redis client for class-level calls operating on multiple series, as well as series created without specifying a client.
+```ruby
+Redis::TimeSeries.redis = Redis.new(url: ENV['REDIS_URL'], timeout: 1)
+```
+
 ### Creating a Series
 Create a series (issues `TS.CREATE` command) and return a Redis::TimeSeries object for further use. Key param is required, all other arguments are optional.
 ```ruby
@@ -58,7 +64,7 @@ ts = Redis::TimeSeries.create(
   labels: { foo: 'bar' },
   retention: 600,
   uncompressed: false,
-  redis: Redis.new(url: ENV['REDIS_URL']) # defaults to Redis.current
+  redis: Redis.new(url: ENV['REDIS_URL']) # defaults to Redis::TimeSeries.redis
 )
 ```
 You can also call `.new` instead of `.create` to skip the `TS.CREATE` command.

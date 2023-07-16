@@ -41,7 +41,8 @@ class Redis
       #   A duplication policy to resolve conflicts when adding values to the series.
       #   Valid values are in Redis::TimeSeries::DuplicatePolicy::VALID_POLICIES
       # @option options [Integer] :chunk_size
-      #   Amount of memory, in bytes, to allocate for each chunk of data
+      #   Amount of memory, in bytes, to allocate for each chunk of data. Must be a multiple
+      #   of 8. Default for a series is 4096.
       #
       # @return [Redis::TimeSeries] the created time series
       # @see https://oss.redislabs.com/redistimeseries/commands/#tscreate
@@ -107,7 +108,7 @@ class Redis
       #
       def madd(data)
         data.reduce([]) do |memo, (key, value)|
-          memo << parse_madd_values(key, value)
+          memo += parse_madd_values(key, value)
           memo
         end.then do |values|
           cmd('TS.MADD', values).then { |result| Samples.from_madd(values, result) }
@@ -211,7 +212,7 @@ class Redis
           end
         else
           # single value, no timestamp
-          [key, '*', raw]
+          [[key, '*', raw]]
         end
       end
     end
