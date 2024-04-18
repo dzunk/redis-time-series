@@ -124,7 +124,7 @@ class Redis
       end
 
       def valid?
-        !!filters.find { |f| f.is_a? Equal }
+        !!filters.find { |f| f.is_a?(Equal) || f.is_a?(AnyValue)}
       end
 
       def to_a
