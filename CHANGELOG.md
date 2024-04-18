@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.8.1
 * Add Ruby 3.2 to build matrix (#82)
 * Bump actions versions to v4 (#86)
 * Add Ruby 3.3, drop Ruby 2.6 from build matrix (#87)
