@@ -3,6 +3,7 @@
 ## Unreleased
 * Add Ruby 3.2 to build matrix (#82)
 * Bump actions versions to v4 (#86)
+* Add Ruby 3.3, drop Ruby 2.6 from build matrix (#87)
 
 ## 0.8.0
 * Remove usage of `Redis.current` (#78)
