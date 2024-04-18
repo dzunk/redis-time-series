@@ -93,6 +93,12 @@ RSpec.describe Redis::TimeSeries::Filters do
       it { is_expected.not_to be_valid }
     end
 
+    context 'with any value filter' do
+      let(:value) { 'foo=(bar,baz)' }
+
+      it { is_expected.to be_valid }
+    end
+
     context 'with no filters' do
       let(:value) { nil }
 
