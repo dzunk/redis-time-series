@@ -46,5 +46,5 @@ jobs:
       run: ./cc-test-reporter after-build -t simplecov coverage/.resultset.json
     - uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: coverage-${{ matrix.ruby_version }}-${{ matrix.image_version }}
         path: coverage/
