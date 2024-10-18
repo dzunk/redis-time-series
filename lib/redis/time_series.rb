@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 using TimeMsec
 
 class Redis
@@ -312,7 +313,6 @@ class Redis
     end
     alias decrement decrby
 
-
     # Delete all data and remove this time series from Redis.
     #
     # @return [1] if the series existed
@@ -330,6 +330,7 @@ class Redis
     def get
       cmd('TS.GET', key).then do |timestamp, value|
         return unless value
+
         Sample.new(timestamp, value)
       end
     end
@@ -390,7 +391,7 @@ class Redis
     def madd(data)
       args = self.class.send(:parse_madd_values, key, data)
       cmd('TS.MADD', args).each_with_index.map do |result, idx|
-        result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
+        result.is_a?(RedisClient::CommandError) ? result : Sample.new(result, args[idx][2])
       end
     end
     alias multi_add madd
@@ -410,6 +411,17 @@ class Redis
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
     def range(range, count: nil, aggregation: nil)
       range_cmd('TS.RANGE', range, count, aggregation)
+    end
+
+    # Delete a range of values from the series
+    #
+    # @param range [Range] A time range to delete.
+    #
+    # @see https://oss.redislabs.com/redistimeseries/commands/#tsdel
+    def del(range)
+      cmd('TS.DEL', key,
+          range.begin,
+          range.end)
     end
 
     # Get a range of values from the series, from most recent to earliest
@@ -443,6 +455,7 @@ class Redis
     # @return [Boolean] whether the two TimeSeries objects refer to the same series
     def ==(other)
       return false unless other.is_a?(self.class)
+
       key == other.key && redis == other.redis
     end
 
@@ -454,8 +467,7 @@ class Redis
           (range.begin || '-'),
           (range.end || '+'),
           (['COUNT', count] if count),
-          Aggregation.parse(agg)&.to_a
-         ).map { |ts, val| Sample.new(ts, val) }
+          Aggregation.parse(agg)&.to_a).map { |ts, val| Sample.new(ts, val) }
     end
   end
 end

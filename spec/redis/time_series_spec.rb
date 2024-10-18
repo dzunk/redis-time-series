@@ -1,9 +1,10 @@
 # frozen_string_literal: true
+
 RSpec.describe Redis::TimeSeries do
   subject(:ts) { described_class.create(key) }
 
   let(:key) { 'time_series_test' }
-  let(:time) { 1591339859 }
+  let(:time) { 1_591_339_859 }
   let(:from) { Time.at(time) }
   let(:to) { Time.at(time) + 120 }
 
@@ -127,7 +128,7 @@ RSpec.describe Redis::TimeSeries do
       let(:time) { ActiveSupport::TimeWithZone.new(Time.now, TZInfo::Timezone.get('Etc/UTC')) }
 
       specify do
-        expect { ts.add 123, time }.to issue_command "TS.ADD #{key} #{time.strftime("%s%L")} 123"
+        expect { ts.add 123, time }.to issue_command "TS.ADD #{key} #{time.strftime('%s%L')} 123"
       end
     end
 
@@ -159,7 +160,7 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with a hash of timestamps and values' do
       specify do
-        expect { ts.madd(1591339859 => 12, 1591339860 => 34) }.to issue_command \
+        expect { ts.madd(1_591_339_859 => 12, 1_591_339_860 => 34) }.to issue_command \
           "TS.MADD #{key} 1591339859 12 #{key} 1591339860 34"
       end
     end
@@ -180,13 +181,13 @@ RSpec.describe Redis::TimeSeries do
 
       specify do
         expect { described_class.madd(foo: 1, bar: 2, baz: 3) }.to issue_command \
-          "TS.MADD foo * 1 bar * 2 baz * 3"
+          'TS.MADD foo * 1 bar * 2 baz * 3'
       end
 
       specify do
         expect do
           described_class.madd(foo: { 123 => 1 }, bar: { 456 => 2, 678 => 3 })
-        end.to issue_command "TS.MADD foo 123 1 bar 456 2 bar 678 3"
+        end.to issue_command 'TS.MADD foo 123 1 bar 456 2 bar 678 3'
       end
 
       specify do
@@ -201,6 +202,12 @@ RSpec.describe Redis::TimeSeries do
           be_a(Redis::TimeSeries::Sample)
         )
       end
+    end
+  end
+
+  describe 'TS.DEL' do
+    specify do
+      expect { ts.del from..to }.to issue_command "TS.DEL #{key} #{msec from} #{msec to}"
     end
   end
 
@@ -264,7 +271,7 @@ RSpec.describe Redis::TimeSeries do
 
     before do
       dest = described_class.create dest_key
-      ts.create_rule dest: dest, aggregation: [:avg, 120000]
+      ts.create_rule dest: dest, aggregation: [:avg, 120_000]
     end
     after { described_class.destroy dest_key }
 
@@ -306,13 +313,13 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with an aggregation' do
       specify do
-        expect { ts.range from..to, aggregation: [:avg, 60000] }.to issue_command \
+        expect { ts.range from..to, aggregation: [:avg, 60_000] }.to issue_command \
           "TS.RANGE #{key} #{msec from} #{msec to} AGGREGATION avg 60000"
       end
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to be_a BigDecimal
+        expect(ts.range(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120_000]).first.value).to be_a BigDecimal
       end
     end
 
@@ -346,13 +353,14 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with an aggregation' do
       specify do
-        expect { ts.revrange from..to, aggregation: [:avg, 60000] }.to issue_command \
+        expect { ts.revrange from..to, aggregation: [:avg, 60_000] }.to issue_command \
           "TS.REVRANGE #{key} #{msec from} #{msec to} AGGREGATION avg 60000"
       end
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to be_a BigDecimal
+        expect(ts.revrange(1.minute.ago..1.minute.from_now,
+                           aggregation: [:avg, 120_000]).first.value).to be_a BigDecimal
       end
     end
 
@@ -386,13 +394,14 @@ RSpec.describe Redis::TimeSeries do
 
     context 'with an aggregation' do
       specify do
-        expect { ts.revrange from..to, aggregation: [:avg, 60000] }.to issue_command \
+        expect { ts.revrange from..to, aggregation: [:avg, 60_000] }.to issue_command \
           "TS.REVRANGE #{key} #{msec from} #{msec to} AGGREGATION avg 60000"
       end
 
       it 'returns the aggregated results' do
         (2..6).each { |n| ts.add(n, n.seconds.from_now) }
-        expect(ts.revrange(1.minute.ago..1.minute.from_now, aggregation: [:avg, 120000]).first.value).to be_a BigDecimal
+        expect(ts.revrange(1.minute.ago..1.minute.from_now,
+                           aggregation: [:avg, 120_000]).first.value).to be_a BigDecimal
       end
     end
 
@@ -408,12 +417,14 @@ RSpec.describe Redis::TimeSeries do
   describe 'TS.MRANGE' do
     specify do
       expect { described_class.mrange(123..456, filter: { foo: 'bar' }) }
-        .to issue_command "TS.MRANGE 123 456 FILTER foo=bar"
+        .to issue_command 'TS.MRANGE 123 456 FILTER foo=bar'
     end
 
     context 'with all options' do
       specify do
-        expect { described_class.mrange(123..456, filter: { foo: 'bar' }, count: 7, aggregation: [:avg, 89], with_labels: true) }
+        expect do
+          described_class.mrange(123..456, filter: { foo: 'bar' }, count: 7, aggregation: [:avg, 89], with_labels: true)
+        end
           .to issue_command 'TS.MRANGE 123 456 COUNT 7 AGGREGATION avg 89 WITHLABELS FILTER foo=bar'
       end
     end
