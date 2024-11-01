@@ -22,6 +22,7 @@ class Redis
         sum
         var.p
         var.s
+        twa
       ]
 
       # @return [String] the type of aggregation to apply
