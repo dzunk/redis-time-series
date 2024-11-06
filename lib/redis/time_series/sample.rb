@@ -8,7 +8,7 @@ class Redis
       # @return [Time] the sample's timestamp
       attr_reader :time
       # @return [BigDecimal] the decimal value of the sample
-      attr_reader :value
+      attr_accessor :value
 
       # Samples are returned by time series query methods, there's no need to create one yourself.
       # @api private
