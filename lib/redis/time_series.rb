@@ -113,7 +113,7 @@ class Redis
           memo
         end.then do |args|
           cmd('TS.MADD', args).each_with_index.map do |result, idx|
-            result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
+            result.is_a?(RedisClient::CommandError) ? result : Sample.new(result, args[idx][2])
           end
         end
       end
@@ -462,12 +462,23 @@ class Redis
     private
 
     def range_cmd(cmd_name, range, count, agg)
+      if agg
       cmd(cmd_name,
           key,
           (range.begin || '-'),
           (range.end || '+'),
+          "ALIGN", "start",
           (['COUNT', count] if count),
-          Aggregation.parse(agg)&.to_a).map { |ts, val| Sample.new(ts, val) }
+          Aggregation.parse(agg)&.to_a,
+          "empty").map { |ts, val| Sample.new(ts, val)}
+      else
+        cmd(cmd_name,
+            key,
+            (range.begin || '-'),
+            (range.end || '+'),
+            (['COUNT', count] if count)
+           ).map { |ts, val| Sample.new(ts, val)}
+      end
     end
   end
 end
