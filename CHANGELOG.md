@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased
-* Add Ruby 3.4 to build matrix (#88)
+* Add Ruby 3.4 to build matrix (#89)
 
 ## 0.8.1
 * Add Ruby 3.2 to build matrix (#82)
