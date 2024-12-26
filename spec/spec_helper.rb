@@ -2,6 +2,7 @@ require 'simplecov'
 SimpleCov.start { add_filter '/spec/' }
 
 require 'bundler/setup'
+require 'active_support'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/testing/time_helpers'
 require 'pry'
