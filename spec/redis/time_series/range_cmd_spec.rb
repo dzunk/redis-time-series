@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe Redis::TimeSeries::RedisRange do
+RSpec.describe Redis::TimeSeries::RangeCmd do
   subject(:range) { described_class.new(timeseries: ts) }
 
   subject(:ts) { "mock_ts" }
@@ -10,7 +10,7 @@ RSpec.describe Redis::TimeSeries::RedisRange do
   let(:key) { "range_test" }
 
   describe ".new" do
-    it "returns an instance of RedisRange" do
+    it "returns an instance of RangeCmd" do
       expect(range).to be_a(described_class)
     end
   end
@@ -22,8 +22,8 @@ RSpec.describe Redis::TimeSeries::RedisRange do
   end
 
   describe "#cmd" do
-    it "calls range_cmd on the timeseries" do
-      expect(ts).to receive(:range_cmd)
+    it "calls cmd on the timeseries" do
+      expect(range).to receive(:cmd)
       range.cmd
     end
   end

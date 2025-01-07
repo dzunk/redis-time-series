@@ -470,7 +470,7 @@ class Redis
     end
 
     def range_cmd(range)
-      cmd(range.cmd_name,
-          *range.options).map { |ts, val| Sample.new(ts, val)}
+      cmd(range.command, key, range.options).map { |ts, val| Sample.new(ts, val)}
+    end
   end
 end
