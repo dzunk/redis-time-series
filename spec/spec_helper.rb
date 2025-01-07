@@ -1,5 +1,5 @@
 require 'simplecov'
-SimpleCov.start { add_filter '/spec/' }
+#SimpleCov.start { add_filter '/spec/' }
 
 require 'bundler/setup'
 require 'active_support/core_ext/numeric/time'
@@ -10,7 +10,7 @@ require 'redis-time-series'
 
 module RedisHelpers
   def redis
-    @redis ||= Redis.new
+    @redis ||= ConnectionPool::Wrapper.new(size: 25, timeout: 50) { Redis.new(host: "10.32.50.105",port: 30271, password: "Apron7-Undercoat-Lunacy") }
   end
 end
 
@@ -26,7 +26,7 @@ RSpec.configure do |config|
   config.include RedisHelpers
   config.include ActiveSupport::Testing::TimeHelpers
 
-  config.before(:suite) { Redis.new.flushdb }
+  #config.before(:suite) { Redis.new.flushdb }
   config.before { Redis::TimeSeries.redis = redis }
 end
 

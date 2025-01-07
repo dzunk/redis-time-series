@@ -67,7 +67,7 @@ class Redis
       # @see TimeSeries#create_rule
       # @see https://oss.redislabs.com/redistimeseries/commands/#tscreaterule
       def create_rule(source:, dest:, aggregation:)
-        cmd 'TS.CREATERULE', key_for(source), key_for(dest), Aggregation.parse(aggregation).to_a
+        cmd("TS.CREATERULE", key_for(source), key_for(dest), Aggregation.parse(aggregation).to_a)
       end
 
       # Delete an existing compaction rule.
@@ -78,7 +78,7 @@ class Redis
       # @return [String] the string "OK"
       # @raise [Redis::CommandError] if the compaction rule does not exist
       def delete_rule(source:, dest:)
-        cmd 'TS.DELETERULE', key_for(source), key_for(dest)
+        cmd("TS.DELETERULE", key_for(source), key_for(dest))
       end
 
       # Delete all data and remove a time series from Redis.
@@ -87,7 +87,7 @@ class Redis
       # @return [1] if the series existed
       # @return [0] if the series did not exist
       def destroy(key)
-        redis.del key
+        redis.del(key)
       end
 
       # Add multiple values to multiple series.
@@ -112,7 +112,7 @@ class Redis
           memo += parse_madd_values(key, value)
           memo
         end.then do |args|
-          cmd('TS.MADD', args).each_with_index.map do |result, idx|
+          cmd("TS.MADD", args).each_with_index.map do |result, idx|
             result.is_a?(RedisClient::CommandError) ? result : Sample.new(result, args[idx][2])
           end
         end
@@ -136,7 +136,7 @@ class Redis
       #
       # @see https://oss.redislabs.com/redistimeseries/commands/#tsmrangetsmrevrange
       def mrange(range, filter:, count: nil, aggregation: nil, with_labels: false)
-        multi_cmd('TS.MRANGE', range, filter, count, aggregation, with_labels)
+        multi_cmd("TS.MRANGE", range, filter, count, aggregation, with_labels)
       end
 
       # Query across multiple series, returning values from newest to oldest.
@@ -155,7 +155,7 @@ class Redis
       #
       # @see https://oss.redislabs.com/redistimeseries/commands/#tsmrangetsmrevrange
       def mrevrange(range, filter:, count: nil, aggregation: nil, with_labels: false)
-        multi_cmd('TS.MREVRANGE', range, filter, count, aggregation, with_labels)
+        multi_cmd("TS.MREVRANGE", range, filter, count, aggregation, with_labels)
       end
 
       # Search for a time series matching the provided filters. Refer to the {Filters} documentation
@@ -177,47 +177,46 @@ class Redis
       def query_index(filter_value)
         filters = Filters.new(filter_value)
         filters.validate!
-        cmd('TS.QUERYINDEX', filters.to_a).map { |key| new(key) }
+        cmd("TS.QUERYINDEX", filters.to_a).map { |key| new(key) }
       end
       alias where query_index
 
       private
-
-      def multi_cmd(cmd_name, range, filter, count, agg, with_labels)
-        filters = Filters.new(filter)
-        filters.validate!
-        cmd(
-          cmd_name,
-          (range.begin || '-'),
-          (range.end || '+'),
-          (['COUNT', count] if count),
-          Aggregation.parse(agg)&.to_a,
-          ('WITHLABELS' if with_labels),
-          ['FILTER', filters.to_a]
-        ).then { |response| Multi.new(response) }
-      end
-
-      def key_for(series_or_string)
-        series_or_string.is_a?(self) ? series_or_string.key : series_or_string.to_s
-      end
-
-      def parse_madd_values(key, raw)
-        if raw.is_a? Hash
-          # multiple timestamp => value pairs
-          raw.map do |timestamp, value|
-            [key, timestamp, value]
-          end
-        elsif raw.is_a? Array
-          # multiple values, no timestamps
-          now = Time.now.ts_msec
-          raw.each_with_index.map do |value, index|
-            [key, now + index, value]
-          end
-        else
-          # single value, no timestamp
-          [[key, '*', raw]]
+        def multi_cmd(cmd_name, range, filter, count, agg, with_labels)
+          filters = Filters.new(filter)
+          filters.validate!
+          cmd(
+            cmd_name,
+            (range.begin || "-"),
+            (range.end || "+"),
+            (["COUNT", count] if count),
+            Aggregation.parse(agg)&.to_a,
+            ("WITHLABELS" if with_labels),
+            ["FILTER", filters.to_a]
+          ).then { |response| Multi.new(response) }
         end
-      end
+
+        def key_for(series_or_string)
+          series_or_string.is_a?(self) ? series_or_string.key : series_or_string.to_s
+        end
+
+        def parse_madd_values(key, raw)
+          if raw.is_a? Hash
+            # multiple timestamp => value pairs
+            raw.map do |timestamp, value|
+              [key, timestamp, value]
+            end
+          elsif raw.is_a? Array
+            # multiple values, no timestamps
+            now = Time.now.ts_msec
+            raw.each_with_index.map do |value, index|
+              [key, now + index, value]
+            end
+          else
+            # single value, no timestamp
+            [[key, "*", raw]]
+          end
+        end
     end
 
     # @return [String] the Redis key this time series is stored in
@@ -242,14 +241,14 @@ class Redis
     # @raise [Redis::CommandError] if the value being added is older than the latest timestamp in the series
     #
     # @see TimeSeries::DuplicatePolicy
-    def add(value, timestamp = '*', uncompressed: nil, on_duplicate: nil, chunk_size: nil)
-      ts = cmd 'TS.ADD',
+    def add(value, timestamp = "*", uncompressed: nil, on_duplicate: nil, chunk_size: nil)
+      ts = cmd("TS.ADD",
                key,
                timestamp,
                value,
-               ('UNCOMPRESSED' if uncompressed),
-               (['CHUNK_SIZE', chunk_size] if chunk_size),
-               (DuplicatePolicy.new(on_duplicate).to_a('ON_DUPLICATE') if on_duplicate)
+               ("UNCOMPRESSED" if uncompressed),
+               (["CHUNK_SIZE", chunk_size] if chunk_size),
+               (DuplicatePolicy.new(on_duplicate).to_a("ON_DUPLICATE") if on_duplicate))
       Sample.new(ts, value)
     end
 
@@ -257,12 +256,12 @@ class Redis
     # You should use class method {Redis::TimeSeries.create} instead.
     # @api private
     def create(retention: nil, uncompressed: nil, labels: nil, duplicate_policy: nil, chunk_size: nil)
-      cmd 'TS.CREATE', key,
-          (['RETENTION', retention] if retention),
-          ('UNCOMPRESSED' if uncompressed),
-          (['CHUNK_SIZE', chunk_size] if chunk_size),
+      cmd("TS.CREATE", key,
+          (["RETENTION", retention] if retention),
+          ("UNCOMPRESSED" if uncompressed),
+          (["CHUNK_SIZE", chunk_size] if chunk_size),
           (DuplicatePolicy.new(duplicate_policy).to_a if duplicate_policy),
-          (['LABELS', labels.to_a] if labels&.any?)
+          (["LABELS", labels.to_a] if labels&.any?))
       self
     end
 
@@ -304,12 +303,12 @@ class Redis
     # @return [Integer] the timestamp the value was stored at
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsincrbytsdecrby
     def decrby(value = 1, timestamp = nil, uncompressed: nil, chunk_size: nil)
-      cmd 'TS.DECRBY',
+      cmd("TS.DECRBY",
           key,
           value,
           (timestamp if timestamp),
-          ('UNCOMPRESSED' if uncompressed),
-          (['CHUNK_SIZE', chunk_size] if chunk_size)
+          ("UNCOMPRESSED" if uncompressed),
+          (["CHUNK_SIZE", chunk_size] if chunk_size))
     end
     alias decrement decrby
 
@@ -318,7 +317,7 @@ class Redis
     # @return [1] if the series existed
     # @return [0] if the series did not exist
     def destroy
-      redis.del key
+      redis.del(key)
     end
 
     # Get the most recent sample for this series.
@@ -328,7 +327,7 @@ class Redis
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsget
     def get
-      cmd('TS.GET', key).then do |timestamp, value|
+      cmd("TS.GET", key).then do |timestamp, value|
         return unless value
 
         Sample.new(timestamp, value)
@@ -345,12 +344,12 @@ class Redis
     # @return [Integer] the timestamp the value was stored at
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsincrbytsdecrby
     def incrby(value = 1, timestamp = nil, uncompressed: nil, chunk_size: nil)
-      cmd 'TS.INCRBY',
+      cmd("TS.INCRBY",
           key,
           value,
           (timestamp if timestamp),
-          ('UNCOMPRESSED' if uncompressed),
-          (['CHUNK_SIZE', chunk_size] if chunk_size)
+          ("UNCOMPRESSED" if uncompressed),
+          (["CHUNK_SIZE", chunk_size] if chunk_size))
     end
     alias increment incrby
 
@@ -363,7 +362,7 @@ class Redis
     # @see Info
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsinfo
     def info
-      Info.parse series: self, data: cmd('TS.INFO', key)
+      Info.parse(series: self, data: cmd("TS.INFO", key))
     end
     def_delegators :info, *Info.members - [:series] + %i[count length size source]
 
@@ -374,7 +373,7 @@ class Redis
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsalter
     def labels=(val)
-      cmd 'TS.ALTER', key, 'LABELS', val.to_a
+      cmd("TS.ALTER", key, "LABELS", val.to_a)
     end
 
     # Add multiple values to the series.
@@ -390,7 +389,7 @@ class Redis
     #
     def madd(data)
       args = self.class.send(:parse_madd_values, key, data)
-      cmd('TS.MADD', args).each_with_index.map do |result, idx|
+      cmd("TS.MADD", args).each_with_index.map do |result, idx|
         result.is_a?(RedisClient::CommandError) ? result : Sample.new(result, args[idx][2])
       end
     end
@@ -409,8 +408,13 @@ class Redis
     # @return [Array<Sample>] an array of samples matching the range query
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
-    def range(range, count: nil, aggregation: nil)
-      range_cmd('TS.RANGE', range, count, aggregation)
+    def range(range, count: nil, filter_by_ts: nil, filter_by_val: nil, aggregation: nil)
+      range = RangeCmd.new(timeseries: self, start_time: range.begin, end_time: range.end)
+      range.count = count
+      range.filter_by_ts = filter_by_ts
+      range.filter_by_value = filter_by_val
+      range.aggregation = aggregation
+      range.cmd
     end
 
     # Delete a range of values from the series
@@ -419,7 +423,7 @@ class Redis
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsdel
     def del(range)
-      cmd('TS.DEL', key,
+      cmd("TS.DEL", key,
           range.begin,
           range.end)
     end
@@ -436,8 +440,14 @@ class Redis
     # @return [Array<Sample>] an array of samples matching the range query
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsrangetsrevrange
-    def revrange(range, count: nil, aggregation: nil)
-      range_cmd('TS.REVRANGE', range, count, aggregation)
+    def revrange(range, count: nil, filter_by_ts: nil, filter_by_val: nil, aggregation: nil)
+      range = RangeCmd.new(timeseries: self, start_time: range.begin, end_time: range.end)
+      range.revrange
+      range.count = count
+      range.filter_by_ts = filter_by_ts
+      range.filter_by_value = filter_by_val
+      range.aggregation = aggregation
+      range.cmd
     end
 
     # Set data retention time for the series using +TS.ALTER+
@@ -448,7 +458,7 @@ class Redis
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsalter
     def retention=(val)
       # TODO: this should also accept an ActiveSupport::Duration
-      cmd 'TS.ALTER', key, 'RETENTION', val.to_i
+      cmd("TS.ALTER", key, "RETENTION", val.to_i)
     end
 
     # Compare series based on Redis key and configured client.
@@ -459,26 +469,8 @@ class Redis
       key == other.key && redis == other.redis
     end
 
-    private
-
-    def range_cmd(cmd_name, range, count, agg)
-      if agg
-      cmd(cmd_name,
-          key,
-          (range.begin || '-'),
-          (range.end || '+'),
-          "ALIGN", "start",
-          (['COUNT', count] if count),
-          Aggregation.parse(agg)&.to_a,
-          "empty").map { |ts, val| Sample.new(ts, val)}
-      else
-        cmd(cmd_name,
-            key,
-            (range.begin || '-'),
-            (range.end || '+'),
-            (['COUNT', count] if count)
-           ).map { |ts, val| Sample.new(ts, val)}
-      end
-    end
+    def range_cmd(range)
+      cmd(range.cmd_name,
+          *range.options).map { |ts, val| Sample.new(ts, val)}
   end
 end
