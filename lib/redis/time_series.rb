@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-using TimeMsec
-
 class Redis
   # The +Redis::TimeSeries+ class is an interface for working with time-series data in
   # Redis, using the {https://oss.redislabs.com/redistimeseries RedisTimeSeries} module.
@@ -208,7 +206,7 @@ class Redis
             end
           elsif raw.is_a? Array
             # multiple values, no timestamps
-            now = Time.now.ts_msec
+            now = Time.now.to_i * 1000
             raw.each_with_index.map do |value, index|
               [key, now + index, value]
             end
@@ -470,7 +468,7 @@ class Redis
     end
 
     def range_cmd(range)
-      cmd(range.command, key, range.options).map { |ts, val| Sample.new(ts, val)}
+      cmd(range.command, key, range.options).map { |ts, val| Sample.new(ts, val) }
     end
   end
 end

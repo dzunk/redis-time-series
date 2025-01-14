@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-using TimeMsec
 
 class Redis
   class TimeSeries
@@ -9,12 +8,12 @@ class Redis
     module Client
       def self.extended(base)
         base.class_eval do
-          attr_reader :redis
+          attr_reader(:redis)
 
           private
 
           def cmd(name, *args)
-            self.class.send :cmd_with_redis, redis, name, *args
+            self.class.send(:cmd_with_redis, redis, name, *args)
           end
         end
       end
@@ -62,16 +61,15 @@ class Redis
       end
 
       private
+        def cmd(name, *args)
+          cmd_with_redis redis, name, *args
+        end
 
-      def cmd(name, *args)
-        cmd_with_redis redis, name, *args
-      end
-
-      def cmd_with_redis(redis, name, *args)
-        args = args.flatten.compact.map { |arg| arg.is_a?(Time) ? arg.ts_msec : arg.to_s }
-        puts "DEBUG: #{name} #{args.join(' ')}" if debug
-        redis.call name, args
-      end
+        def cmd_with_redis(redis, name, *args)
+          args = args.flatten.compact.map { |arg| arg.is_a?(Time) ? arg.to_i * 1000 : arg.to_s }
+          puts "DEBUG: #{name} #{args.join(' ')}" if debug
+          redis.call name, args
+        end
     end
   end
 end

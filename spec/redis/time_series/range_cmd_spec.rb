@@ -5,9 +5,15 @@ require "spec_helper"
 RSpec.describe Redis::TimeSeries::RangeCmd do
   subject(:range) { described_class.new(timeseries: ts) }
 
-  subject(:ts) { "mock_ts" }
+  let(:key) { "time_series_test" }
+  subject(:ts) { Redis::TimeSeries.create(key) }
+
+  let(:summer_time) { Time.parse("2024-03-31") }
+  let(:winter_time) { Time.parse("2024-10-27") }
 
   let(:key) { "range_test" }
+
+  after { redis.del(key) }
 
   describe ".new" do
     it "returns an instance of RangeCmd" do
@@ -25,6 +31,46 @@ RSpec.describe Redis::TimeSeries::RangeCmd do
     it "calls cmd on the timeseries" do
       expect(range).to receive(:cmd)
       range.cmd
+    end
+
+    context "with an aggregation duration of 1.month" do
+      it "returns an array of samples aggregated by the duration of that month" do
+        timestamp1 = Time.parse("2024-01-01").to_i * 1000
+        timestamp2 = Time.parse("2024-02-01").to_i * 1000
+        timestamp3 = Time.parse("2024-03-01").to_i * 1000
+        timestamp4 = Time.parse("2024-04-01").to_i * 1000
+
+        values = { timestamp1 => 10, timestamp2 => 20, timestamp3 => 30 }
+        ts.madd(values)
+
+        range_cmd = described_class.new(timeseries: ts, start_time: timestamp1, end_time: timestamp4)
+        range_cmd.aggregation = ["avg", 2629746000]
+        result = range_cmd.cmd
+        expect(result.map { |sample| sample.value }).to match_array([10, 20, 30])
+        expect(result.map { |sample| sample.time.to_i * 1000 }).to eq([timestamp1, timestamp2, timestamp3])
+      end
+    end
+
+    context "with an aggregation duration of 1.day" do
+      it "saves daily calculated values considering DST" do
+        timestamp1 = (summer_time - 2.days)
+        timestamp2 = (summer_time - 1.day)
+        timestamp3 = (summer_time)
+        timestamp4 = (summer_time + 2.days)
+        timestamp5 = (winter_time - 2.days)
+        timestamp6 = (winter_time - 1.day)
+        timestamp7 = (winter_time)
+        timestamp8 = (winter_time + 2.days)
+
+        values = { timestamp1 => 10, timestamp2 => 30, timestamp3 => 40, timestamp4 => 45, timestamp5 => 10, timestamp6 => 30, timestamp7 => 40, timestamp8 => 45 }
+        ts.madd(values)
+
+        range_cmd = described_class.new(timeseries: ts, start_time: timestamp1, end_time: timestamp8)
+        range_cmd.aggregation = ["avg", 86400000]
+        result = range_cmd.cmd.filter_map { |sample| sample.value.nan? ? nil : sample }
+        expect(result.map { |sample| sample.time }).to eq([timestamp1, timestamp2, timestamp3, timestamp4, timestamp5, timestamp6, timestamp7, timestamp8])
+        expect(result.map { |sample| sample.value.to_f.round(1) }).to eq([10, 30, 40, 45, 10, 30, 40, 45])
+      end
     end
   end
 
