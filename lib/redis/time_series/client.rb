@@ -8,7 +8,9 @@ class Redis
     module Client
       def self.extended(base)
         base.class_eval do
-          attr_reader(:redis)
+          def redis
+            self.class.redis
+          end
 
           private
 
@@ -43,7 +45,7 @@ class Redis
 
       # @return [Redis] the current Redis client. Defaults to +Redis.new+
       def redis
-        @redis ||= Redis.new
+        @pipeline || @redis ||= Redis.new
       end
 
       # Set the default Redis client for time series objects.
@@ -58,6 +60,15 @@ class Redis
       # @return [Redis]
       def redis=(client)
         @redis = client
+      end
+
+      def pipelined(&block)
+        self.redis.pipelined do |pipeline|
+          @pipeline = pipeline
+          yield
+        end
+      ensure
+        @pipeline = nil
       end
 
       private
