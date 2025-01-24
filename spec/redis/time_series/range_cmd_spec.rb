@@ -35,10 +35,10 @@ RSpec.describe Redis::TimeSeries::RangeCmd do
 
     context "with an aggregation duration of 1.month" do
       it "returns an array of samples aggregated by the duration of that month" do
-        timestamp1 = Time.parse("2024-01-01").to_i * 1000
-        timestamp2 = Time.parse("2024-02-01").to_i * 1000
-        timestamp3 = Time.parse("2024-03-01").to_i * 1000
-        timestamp4 = Time.parse("2024-04-01").to_i * 1000
+        timestamp1 = Time.parse("2024-01-01")
+        timestamp2 = Time.parse("2024-02-01")
+        timestamp3 = Time.parse("2024-03-01")
+        timestamp4 = Time.parse("2024-04-01")
 
         values = { timestamp1 => 10, timestamp2 => 20, timestamp3 => 30 }
         ts.madd(values)
@@ -47,7 +47,7 @@ RSpec.describe Redis::TimeSeries::RangeCmd do
         range_cmd.aggregation = ["avg", 2629746000]
         result = range_cmd.cmd
         expect(result.map { |sample| sample.value }).to match_array([10, 20, 30])
-        expect(result.map { |sample| sample.time.to_i * 1000 }).to eq([timestamp1, timestamp2, timestamp3])
+        expect(result.map { |sample| sample.time }).to eq([timestamp1, timestamp2, timestamp3])
       end
     end
 
