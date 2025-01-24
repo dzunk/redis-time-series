@@ -50,13 +50,21 @@ class Redis
       end
 
       def cmd
+        result = []
         if @aggregation&.duration == 2629746000
-          monthly_aggregation
+          result = monthly_aggregation
         elsif @aggregation&.duration == 86400000
-          daily_aggregation
+          result = daily_aggregation
         else
-          @timeseries.range_cmd(self)
+          if @filter_by_ts
+            result = Redis::TimeSeries.pipelined do
+              sliced_cmd_for_filter_by_ts
+            end
+          else
+            result = @timeseries.range_cmd(self)
+          end
         end
+        result.map { |ts, val| Sample.new(ts, val) }
       end
 
       private
@@ -79,27 +87,44 @@ class Redis
 
         def daily_aggregation
           Redis::TimeSeries.new(@timeseries.key)
-          samples = []
 
           # set up, make sure the while runs at least once
           current_start = Time.at(start_time)
           ts_end_time = Time.at(end_time)
           current_end = end_time - 1
 
-          while current_end < ts_end_time
+          result = Redis::TimeSeries.pipelined do
+            while current_end < ts_end_time
 
-            day_after_dst_transition = Time.at(TZInfo::Timezone.get(Time.now.zone).period_for_local(current_start).end_transition.timestamp_value + 1.day).beginning_of_day
-            current_end = (day_after_dst_transition < ts_end_time ? Time.at(day_after_dst_transition) - 1 : ts_end_time)
+              day_after_dst_transition = Time.at(TZInfo::Timezone.get(Time.now.zone).period_for_local(current_start).end_transition.timestamp_value + 1.day).beginning_of_day
+              current_end = (day_after_dst_transition < ts_end_time ? Time.at(day_after_dst_transition) - 1 : ts_end_time)
 
-            @start_time = current_start
-            @end_time = current_end
-            sample_subset = @timeseries.range_cmd(self)
-            samples << sample_subset
+              @start_time = current_start
+              @end_time = current_end
 
-            current_start = day_after_dst_transition
+              if @filter_by_ts
+                sliced_cmd_for_filter_by_ts
+              else
+                @timeseries.range_cmd(self)
+              end
+
+              current_start = day_after_dst_transition
+            end
+
           end
+          result&.flatten(1)
+        end
 
-          samples.flatten
+        def sliced_cmd_for_filter_by_ts
+          result = []
+          all_filter_by_ts = @filter_by_ts
+          all_filter_by_ts.each_slice(128) {|filter_by_ts|
+            @filter_by_ts = filter_by_ts
+            result << @timeseries.range_cmd(self)
+
+          }
+          @filter_by_ts = all_filter_by_ts
+          result.flatten(1)
         end
     end
   end
