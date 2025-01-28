@@ -85,7 +85,9 @@ class Redis
       # @return [1] if the series existed
       # @return [0] if the series did not exist
       def destroy(key)
-        redis.del(key)
+        self.redis.with do |conn|
+          conn.del(key)
+        end
       end
 
       # Add multiple values to multiple series.
