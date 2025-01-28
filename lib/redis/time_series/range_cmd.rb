@@ -5,7 +5,7 @@ class Redis
     # The +Redis::TimeSeries::RangeCmd+ class is used to chain options for the TS.RANGE command
     class RangeCmd
       attr_reader :command, :timeseries
-      attr_accessor :filter_by_ts, :filter_by_value, :count, :align, :empty
+      attr_accessor :filter_by_ts, :filter_by_range, :filter_by_value, :count, :align, :empty
 
       def initialize(timeseries:, start_time: "-", end_time: "+")
         @timeseries = timeseries
@@ -56,15 +56,18 @@ class Redis
         elsif @aggregation&.duration == 86400000
           result = daily_aggregation
         else
-          if @filter_by_ts
-            result = Redis::TimeSeries.pipelined do
+          result = Redis::TimeSeries.pipelined do
+            if @filter_by_ts
               sliced_cmd_for_filter_by_ts
+            elsif @filter_by_range
+              sliced_cmd_for_filter_by_range
+            else
+              @timeseries.range_cmd(self)
             end
-          else
-            result = @timeseries.range_cmd(self)
           end
         end
-        result.map { |ts, val| Sample.new(ts, val) }
+        #result.flatten(1).each { |ts, val| raise [@timeseries,result].inspect if ts.nil? }
+        result.flatten(1).filter_map { |ts, val| ts.nil? ? nil : Sample.new(ts, val) }
       end
 
       private
@@ -104,6 +107,8 @@ class Redis
 
               if @filter_by_ts
                 sliced_cmd_for_filter_by_ts
+              elsif @filter_by_range
+                sliced_cmd_for_filter_by_range
               else
                 @timeseries.range_cmd(self)
               end
@@ -112,7 +117,22 @@ class Redis
             end
 
           end
-          result&.flatten(1)
+          result
+        end
+
+        def sliced_cmd_for_filter_by_range
+          result = []
+          start_time = @start_time
+          end_time = @end_time
+          filter_by_range.each {|range|
+            @start_time = range.begin
+            @end_time = range.end
+            result << @timeseries.range_cmd(self)
+
+          }
+          @start_time = start_time
+          @end_time = end_time
+          result
         end
 
         def sliced_cmd_for_filter_by_ts
@@ -124,7 +144,7 @@ class Redis
 
           }
           @filter_by_ts = all_filter_by_ts
-          result.flatten(1)
+          result
         end
     end
   end
