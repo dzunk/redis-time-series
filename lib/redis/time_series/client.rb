@@ -63,9 +63,11 @@ class Redis
       end
 
       def pipelined(&block)
-        self.redis.pipelined do |pipeline|
-          @pipeline = pipeline
-          yield
+        self.redis.with do |conn|
+          conn.pipelined do |pipeline|
+            @pipeline = pipeline
+            yield
+          end
         end
       ensure
         @pipeline = nil
@@ -79,7 +81,9 @@ class Redis
         def cmd_with_redis(redis, name, *args)
           args = args.flatten.compact.map { |arg| arg.is_a?(Time) ? arg.to_i * 1000 : arg.to_s }
           puts "DEBUG: #{name} #{args.join(' ')}" if debug
-          redis.call name, args
+          redis.with do |conn|
+            conn.call name, args
+          end
         end
     end
   end
