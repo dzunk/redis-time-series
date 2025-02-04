@@ -13,7 +13,7 @@ RSpec.describe Redis::TimeSeries::RangeCmd do
 
   let(:key) { "range_test" }
 
-  after { redis.del(key) }
+  after { Redis::TimeSeries.redis.with{ |conn| conn.del(key) } }
 
   describe ".new" do
     it "returns an instance of RangeCmd" do

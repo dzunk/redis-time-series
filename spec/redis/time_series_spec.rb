@@ -8,10 +8,14 @@ RSpec.describe Redis::TimeSeries do
   let(:from) { Time.at(time) }
   let(:to) { Time.at(time) + 120 }
 
-  after { redis.del(key) }
+  after { redis.with{ |conn| conn.del(key) } }
 
   def msec(ts)
     (ts.to_f * 1000).to_i
+  end
+
+  it "should provide a connection method" do
+    expect(described_class.new(key).redis ).to eq(Redis::TimeSeries.redis)
   end
 
   describe "TS.CREATE" do
@@ -431,8 +435,10 @@ RSpec.describe Redis::TimeSeries do
     end
 
     after do
-      redis.del("ts1")
-      redis.del("ts2")
+      self.redis.with{ |conn|
+        conn.del("ts1")
+        conn.del("ts2")
+      }
     end
 
     describe "mrange" do
@@ -528,8 +534,10 @@ RSpec.describe Redis::TimeSeries do
     end
 
     after do
-      redis.del("good")
-      redis.del("bad")
+      self.redis.with{ |conn|
+        conn.del("good")
+        conn.del("bad")
+      }
     end
 
     specify { expect { result }.to issue_command("TS.QUERYINDEX foo=bar") }

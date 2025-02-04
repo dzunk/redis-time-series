@@ -8,9 +8,13 @@ require 'pry'
 require 'redis'
 require 'redis-time-series'
 
+REDIS_PORT = ENV['REDIS_PORT'] || 9000
+REDIS_HOST = ENV['REDIS_HOST'] || '127.0.0.1'
+REDIS_PASSWORD = ENV['REDIS_PASSWORD'] || ""
+
 module RedisHelpers
   def redis
-    @redis ||= ConnectionPool::Wrapper.new(size: 25, timeout: 50) { Redis.new(host: "10.32.50.105",port: 30271, password: "Apron7-Undercoat-Lunacy") }
+    @redis ||= ConnectionPool.new(size: 25, timeout: 50) { Redis.new(host: REDIS_HOST,port: REDIS_PORT, password: REDIS_PASSWORD) }
   end
 end
 
@@ -35,10 +39,16 @@ RSpec::Matchers.define :issue_command do |expected|
 
   match do |actual|
     @commands = []
-    allow(redis).to receive(:call).and_wrap_original do |redis, *args|
+    allow_any_instance_of(Redis).to receive(:call).and_wrap_original do |redis, *args|
       @commands << args.join(' ')
       redis.call(*args)
     end
+
+    allow_any_instance_of(Redis::PipelinedConnection).to receive(:call).and_wrap_original do |redis, *args|
+      @commands << args.join(' ')
+      redis.call(*args)
+    end
+
     actual.call
     expect(@commands).to include(expected)
   end

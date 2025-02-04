@@ -8,14 +8,12 @@ class Redis
     module Client
       def self.extended(base)
         base.class_eval do
-          def redis
-            self.class.redis
-          end
+          attr_accessor(:redis)
 
           private
 
-          def cmd(name, *args)
-            self.class.send(:cmd_with_redis, redis, name, *args)
+          def cmd(name, *args, pipeline: nil)
+            self.class.send(:cmd_with_redis, redis, name, *args, pipeline: pipeline)
           end
         end
       end
@@ -43,11 +41,6 @@ class Redis
         @debug = !!bool
       end
 
-      # @return [Redis] the current Redis client. Defaults to +Redis.new+
-      def redis
-        @pipeline || @redis ||= Redis.new
-      end
-
       # Set the default Redis client for time series objects.
       # This may be useful if you already use a non-time-series Redis database, and want
       # to use both at the same time.
@@ -58,31 +51,27 @@ class Redis
       #
       # @param client [Redis] a Redis client
       # @return [Redis]
-      def redis=(client)
-        @redis = client
+      def redis=(conn)
+        $redis = conn # = TimeSeries::ConnectionPoolProxy.proxy_if_needed(conn)
       end
 
-      def pipelined(&block)
-        self.redis.with do |conn|
-          conn.pipelined do |pipeline|
-            @pipeline = pipeline
-            yield
-          end
-        end
-      ensure
-        @pipeline = nil
+      def redis
+        $redis ||
+          raise(NotConnected, "Redis::TimeSeries.redis not set to a Redis.new connection")
       end
 
       private
-        def cmd(name, *args)
-          cmd_with_redis redis, name, *args
+        def cmd(name, *args, pipeline: nil)
+          cmd_with_redis redis, name, *args, pipeline: pipeline
         end
 
-        def cmd_with_redis(redis, name, *args)
+        def cmd_with_redis(redis, name, *args, pipeline: nil)
           args = args.flatten.compact.map { |arg| arg.is_a?(Time) ? arg.to_i * 1000 : arg.to_s }
           puts "DEBUG: #{name} #{args.join(' ')}" if debug
-          redis.with do |conn|
-            conn.call name, args
+          if pipeline
+            pipeline.call name, args
+          else
+            redis.then { |c| c.call name, args }
           end
         end
     end

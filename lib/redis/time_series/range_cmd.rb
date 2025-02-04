@@ -51,18 +51,20 @@ class Redis
 
       def cmd
         result = []
-        if @aggregation&.duration == 2629746000
-          result = monthly_aggregation
-        elsif @aggregation&.duration == 86400000
-          result = daily_aggregation
-        else
-          result = Redis::TimeSeries.pipelined do
-            if @filter_by_ts
-              sliced_cmd_for_filter_by_ts
-            elsif @filter_by_range
-              sliced_cmd_for_filter_by_range
+        @timeseries.redis.with do |conn|
+          result = conn.pipelined do |pipeline|
+            if @aggregation&.duration == 2629746000
+              monthly_aggregation(pipeline)
+            elsif @aggregation&.duration == 86400000
+              daily_aggregation(pipeline)
             else
-              @timeseries.range_cmd(self)
+              if @filter_by_ts
+                sliced_cmd_for_filter_by_ts(pipeline)
+              elsif @filter_by_range
+                sliced_cmd_for_filter_by_range(pipeline)
+              else
+                @timeseries.range_cmd(self,pipeline: pipeline)
+              end
             end
           end
         end
@@ -71,24 +73,38 @@ class Redis
       end
 
       private
-        def monthly_aggregation
+        def monthly_aggregation(pipeline)
+          original_start_time = @start_time
+          original_end_time = @end_time
+          original_aggregation = @aggregation
+
           ts = Redis::TimeSeries.new(@timeseries.key)
           samples = []
           current_start = Time.at(start_time)
           current_end = Time.at(start_time).end_of_month - 1
-          while current_end < Time.at(end_time)
-            sample_subset = ts.range(current_start..current_end, aggregation: [@aggregation.type, (current_end - current_start).round * 1000])
+          while current_end < original_end_time
+            aggregation =  [@aggregation.type, (current_end - current_start).round * 1000]
+            @start_time = current_start
+            @end_time = current_end
+            @timeseries.range_cmd(self,pipeline: pipeline)
+            #result = ts.range(current_start..current_end, aggregation: [@aggregation.type, (current_end - current_start).round * 1000])
+            #result << @timeseries.range_cmd(self,pipeline:)
+            #sample_subset = result.flatten(1).filter_map { |ts, val| ts.nil? ? nil : Sample.new(ts, val) }
             # if nothing is found add an empty value so it can be interpolated later
-            sample_subset << Redis::TimeSeries::Sample.new(current_start.to_i * 1000, BigDecimal("NaN")) if sample_subset.empty?
-            samples << sample_subset
+            #sample_subset << Redis::TimeSeries::Sample.new(current_start.to_i * 1000, BigDecimal("NaN")) if sample_subset.empty?
+            #samples << sample_subset
 
             current_start = Time.at(current_start).advance(months: 1)
-            current_end = Time.at(current_start).end_of_month - 1.second
+            current_end = Time.at(current_start).end_of_month - 1
           end
-          samples.flatten
+          #samples.flatten
+
+          @start_time = original_start_time
+          @end_time = original_end_time
+          @aggregation = original_aggregation
         end
 
-        def daily_aggregation
+        def daily_aggregation(pipeline)
           Redis::TimeSeries.new(@timeseries.key)
 
           # set up, make sure the while runs at least once
@@ -96,38 +112,34 @@ class Redis
           ts_end_time = Time.at(end_time)
           current_end = end_time - 1
 
-          result = Redis::TimeSeries.pipelined do
-            while current_end < ts_end_time
+          while current_end < ts_end_time
 
-              day_after_dst_transition = Time.at(TZInfo::Timezone.get(Time.now.zone).period_for_local(current_start).end_transition.timestamp_value + 1.day).beginning_of_day
-              current_end = (day_after_dst_transition < ts_end_time ? Time.at(day_after_dst_transition) - 1 : ts_end_time)
+            day_after_dst_transition = Time.at(TZInfo::Timezone.get(Time.now.zone).period_for_local(current_start).end_transition.timestamp_value + 1.day).beginning_of_day
+            current_end = (day_after_dst_transition < ts_end_time ? Time.at(day_after_dst_transition) - 1 : ts_end_time)
 
-              @start_time = current_start
-              @end_time = current_end
+            @start_time = current_start
+            @end_time = current_end
 
-              if @filter_by_ts
-                sliced_cmd_for_filter_by_ts
-              elsif @filter_by_range
-                sliced_cmd_for_filter_by_range
-              else
-                @timeseries.range_cmd(self)
-              end
-
-              current_start = day_after_dst_transition
+            if @filter_by_ts
+              sliced_cmd_for_filter_by_ts(pipeline)
+            elsif @filter_by_range
+              sliced_cmd_for_filter_by_range(pipeline)
+            else
+              @timeseries.range_cmd(self,pipeline:)
             end
 
+            current_start = day_after_dst_transition
           end
-          result
         end
 
-        def sliced_cmd_for_filter_by_range
+        def sliced_cmd_for_filter_by_range(pipeline)
           result = []
           start_time = @start_time
           end_time = @end_time
           filter_by_range.each {|range|
             @start_time = range.begin
             @end_time = range.end
-            result << @timeseries.range_cmd(self)
+            result << @timeseries.range_cmd(self,pipeline:)
 
           }
           @start_time = start_time
@@ -135,12 +147,12 @@ class Redis
           result
         end
 
-        def sliced_cmd_for_filter_by_ts
+        def sliced_cmd_for_filter_by_ts(pipeline)
           result = []
           all_filter_by_ts = @filter_by_ts
           all_filter_by_ts.each_slice(128) {|filter_by_ts|
             @filter_by_ts = filter_by_ts
-            result << @timeseries.range_cmd(self)
+            result << @timeseries.range_cmd(self,pipeline:)
 
           }
           @filter_by_ts = all_filter_by_ts

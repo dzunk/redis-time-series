@@ -317,7 +317,7 @@ class Redis
     # @return [1] if the series existed
     # @return [0] if the series did not exist
     def destroy
-      redis.del(key)
+      redis.then{|c| c.del(key)}
     end
 
     # Get the most recent sample for this series.
@@ -469,8 +469,8 @@ class Redis
       key == other.key && redis == other.redis
     end
 
-    def range_cmd(range)
-      cmd(range.command, key, range.options)
+    def range_cmd(range,pipeline: nil)
+      cmd(range.command, key, range.options,pipeline: pipeline)
     end
   end
 end

@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'redis', '>= 3.3'
+  spec.add_dependency 'connection_pool', '>= 2.5'
   spec.add_dependency 'tzinfo', '>= 2.0.6'
   spec.add_dependency 'tzinfo-data', '>= 1.2023.3'
 
