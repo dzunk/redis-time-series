@@ -20,5 +20,7 @@ class Redis
     # duplicate policy when creating or adding to a series.
     # @see Redis::TimeSeries::DuplicatePolicy
     class UnknownPolicyError < Error; end
+
+    class NotConnectedError < StandardError; end
   end
 end
