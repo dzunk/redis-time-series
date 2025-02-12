@@ -21,6 +21,10 @@ class Redis
     # @see Redis::TimeSeries::DuplicatePolicy
     class UnknownPolicyError < Error; end
 
+    # +NotConnectedError+ is raised when Redis::TimeSeries.redis is not set
     class NotConnectedError < StandardError; end
+
+    # +CalculationError+ is raised when an invalid calculation is attempted on a Samples instance
+    class CalculationError < StandardError; end
   end
 end
