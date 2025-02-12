@@ -42,8 +42,34 @@ class Redis
         end
       end
 
+      def avg_values!
+        self.each do |sample|
+          raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
+          sample.value = sample.value.sum / sample.value.length
+        end
+      end
+
       def multiply_values!(factor:)
         self.each { |sample| sample.value = sample.value * factor }
+      end
+
+
+      def divide_values!(factor:)
+        self.each { |sample| sample.value = sample.value / factor }
+      end
+
+      def round_values!(...)
+        self.each { |sample| sample.value = sample.value.round(...) }
+      end
+
+      def filter_negative_values!
+        self.each { |sample| sample.value = 0 if sample.value.blank? || sample.value <= 0 }
+        self
+      end
+
+      def set_negative_values!
+        self.each { |sample| sample.value = sample.value * -1 }
+        self
       end
     end
   end

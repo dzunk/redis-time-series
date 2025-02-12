@@ -56,12 +56,62 @@ RSpec.describe Redis::TimeSeries::Samples do
       end
     end
 
+    describe "#multiply_values!" do
+      it "multiplies an array of values in a Samples object containing CalculatedSample objects" do
+        result = samples1.multiply_values!(factor: 2)
+        expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2])
+        expect(result.map { |s| s.value }).to eq([2, 4])
+      end
+    end
+
+    describe "#divide_values!" do
+      it "divides of values in a Samples object containing CalculatedSample objects" do
+        result = samples1.divide_values!(factor: 2)
+        expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2])
+        expect(result.map { |s| s.value }).to eq([0.5, 1])
+      end
+    end
+
+    describe "#filter_negative_values!" do
+      it "divides of values in a Samples object containing CalculatedSample objects" do
+        samples = described_class.new([Redis::TimeSeries::Sample.new(timestamp1, -1), Redis::TimeSeries::Sample.new(timestamp2, 2)])
+        result = samples.filter_negative_values!
+        expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2])
+        expect(result.map { |s| s.value }).to eq([0, 2])
+      end
+    end
+
+    describe "#set_negative_values!" do
+      it "divides of values in a Samples object containing CalculatedSample objects" do
+        result = samples1.set_negative_values!
+        expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2])
+        expect(result.map { |s| s.value }).to eq([-1, -2])
+      end
+    end
+
+    describe "#round_values!" do
+      it "rounds of values in a Samples object containing CalculatedSample objects" do
+        samples = described_class.new([Redis::TimeSeries::Sample.new(timestamp1, 1), Redis::TimeSeries::Sample.new(timestamp2, "2.21235")])
+        result = samples.round_values!(2)
+        expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2])
+        expect(result.map { |s| s.value }).to eq([1, 2.21])
+      end
+    end
+
     describe "methods that work on merged samples" do
       describe "#sum_values!" do
         it "sums an array of values in a Samples object containing CalculatedSample objects" do
           result = merged_samples.sum_values!
           expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2, timestamp3])
           expect(result.map { |s| s.value }).to eq([4, 2, 4])
+        end
+      end
+
+      describe "#avg_values!" do
+        it "returns the average of an array of values in a Samples object containing CalculatedSample objects" do
+          result = merged_samples.avg_values!
+          expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2, timestamp3])
+          expect(result.map { |s| s.value }).to eq([2, 2, 4])
         end
       end
 
@@ -76,16 +126,9 @@ RSpec.describe Redis::TimeSeries::Samples do
       context "when the sample values do not contain an array" do
         it "raises a CalculationError" do
           expect { samples1.sum_values! }.to raise_error(Redis::TimeSeries::CalculationError)
+          expect { samples1.avg_values! }.to raise_error(Redis::TimeSeries::CalculationError)
           expect { samples1.subtract_values! }.to raise_error(Redis::TimeSeries::CalculationError)
         end
-      end
-    end
-
-    describe "#multiply_values!" do
-      it "multiplies an array of values in a Samples object containing CalculatedSample objects" do
-        result = samples1.multiply_values!(factor: 2)
-        expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2])
-        expect(result.map { |s| s.value }).to eq([2, 4])
       end
     end
   end
