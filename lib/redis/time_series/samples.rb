@@ -3,6 +3,8 @@
 class Redis
   class TimeSeries
     class Samples < DelegateClass(Array)
+      attr_accessor :metadata
+
       def to_a(raw_timestamps: false)
         map do |sample|
           [
