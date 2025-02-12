@@ -33,6 +33,7 @@ class Redis
           raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
           sample.value = sample.value.sum
         end
+        self
       end
 
       def subtract_values!
@@ -40,6 +41,7 @@ class Redis
           raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
           sample.value = sample.value.reduce(sample.value.first * 2) { |result, next_value| result - next_value }
         end
+        self
       end
 
       def avg_values!
@@ -47,19 +49,23 @@ class Redis
           raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
           sample.value = sample.value.sum / sample.value.length
         end
+        self
       end
 
       def multiply_values!(factor:)
         self.each { |sample| sample.value = sample.value * factor }
+        self
       end
 
 
       def divide_values!(factor:)
         self.each { |sample| sample.value = sample.value / factor }
+        self
       end
 
       def round_values!(...)
         self.each { |sample| sample.value = sample.value.round(...) }
+        self
       end
 
       def filter_negative_values!
