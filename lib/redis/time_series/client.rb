@@ -57,7 +57,7 @@ class Redis
 
       def redis
         $redis ||
-          raise(NotConnected, "Redis::TimeSeries.redis not set to a Redis.new connection")
+          raise(NotConnectedError, "Redis::TimeSeries.redis not set to a Redis.new connection")
       end
 
       private

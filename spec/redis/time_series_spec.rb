@@ -18,6 +18,16 @@ RSpec.describe Redis::TimeSeries do
     expect(described_class.new(key).redis ).to eq(Redis::TimeSeries.redis)
   end
 
+  describe ".new_or_create" do
+    it "returns a new or existing timeseries object" do
+      Redis::TimeSeries.destroy("test123123")
+      # first test if the TS does not exist
+      expect(described_class.new_or_create("test123123")).to be_a(Redis::TimeSeries)
+      # then test if the TS does exist
+      expect(described_class.new_or_create("test123123")).to be_a(Redis::TimeSeries)
+    end
+  end
+
   describe "TS.CREATE" do
     subject(:ts) { described_class.new(key) }
 

@@ -68,8 +68,7 @@ class Redis
             end
           end
         end
-        #result.flatten(1).each { |ts, val| raise [@timeseries,result].inspect if ts.nil? }
-        result.flatten(1).filter_map { |ts, val| ts.nil? ? nil : Sample.new(ts, val) }
+        Samples.new(result.flatten(1).filter_map { |timestamp, val| timestamp.nil? ? nil : Sample.new(timestamp, val) })
       end
 
       private

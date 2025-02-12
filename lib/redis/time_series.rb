@@ -49,6 +49,17 @@ class Redis
         new(key, redis: options.fetch(:redis, redis)).create(**options)
       end
 
+      # Find or create a time series
+      # @param key [String] the Redis key to store time series data in
+      def new_or_create(key)
+        ts = Redis::TimeSeries.new(key)
+        ts.get
+        ts
+      rescue Redis::CommandError
+        ts = Redis::TimeSeries.create(key, duplicate_policy: :last)
+        ts
+      end
+
       # Create a compaction rule for a series. Note that both source and destination series
       # must exist before the rule can be created.
       #
