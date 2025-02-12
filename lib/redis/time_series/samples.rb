@@ -27,7 +27,9 @@ class Redis
             samples_hash[sample.time] = calculated_sample
           end
         end
-        Samples.new(samples_hash.values)
+        samples = Samples.new(samples_hash.values)
+        samples.metadata = sample_sets.filter_map{|s| s.metadata}.inject({}){|result,metadata| result.merge(metadata)}
+        samples
       end
 
       def sum_values!
