@@ -18,7 +18,7 @@ class Redis
         to_a(raw_timestamps: raw_timestamps).to_h
       end
 
-      def self.merge(sample_sets:)
+      def self.merge(sample_sets:, keep_only_left:)
         samples_hash = {}
         sample_sets.each do |samples|
           samples.each do |sample|
@@ -28,7 +28,7 @@ class Redis
           end
         end
         samples = Samples.new(samples_hash.values)
-        samples.metadata = sample_sets.filter_map{|s| s.metadata}.inject({}){|result,metadata| result.merge(metadata)}
+        samples.metadata = sample_sets.filter_map{|s| s.metadata}.inject({}){|result,metadata| metadata.merge(result)}
         samples
       end
 
