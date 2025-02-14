@@ -18,7 +18,7 @@ class Redis
         to_a(raw_timestamps: raw_timestamps).to_h
       end
 
-      def self.merge(sample_sets:, keep_only_left:)
+      def self.merge(sample_sets:, merge_strategy: :keep_both)
         samples_hash = {}
         sample_sets.each do |samples|
           samples.each do |sample|
