@@ -82,7 +82,7 @@ class Redis
           current_start = Time.at(start_time)
           current_end = Time.at(start_time).end_of_month - 1
           while current_end < original_end_time
-            [@aggregation.type, (current_end - current_start).round * 1000]
+            self.aggregation = [@aggregation.type, ((current_end - current_start).round) * 1000]
             @start_time = current_start
             @end_time = current_end
             @timeseries.range_cmd(self, pipeline: pipeline)
