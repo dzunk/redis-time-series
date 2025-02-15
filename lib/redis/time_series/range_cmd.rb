@@ -63,7 +63,7 @@ class Redis
               elsif @filter_by_range
                 sliced_cmd_for_filter_by_range(pipeline)
               else
-                @timeseries.range_cmd(self,pipeline: pipeline)
+                @timeseries.range_cmd(self, pipeline: pipeline)
               end
             end
           end
@@ -77,27 +77,27 @@ class Redis
           original_end_time = @end_time
           original_aggregation = @aggregation
 
-          ts = Redis::TimeSeries.new(@timeseries.key)
-          samples = []
+          Redis::TimeSeries.new(@timeseries.key)
+          []
           current_start = Time.at(start_time)
           current_end = Time.at(start_time).end_of_month - 1
           while current_end < original_end_time
-            aggregation =  [@aggregation.type, (current_end - current_start).round * 1000]
-            @align = original_start_time
+            [@aggregation.type, (current_end - current_start).round * 1000]
             @start_time = current_start
             @end_time = current_end
-            @timeseries.range_cmd(self,pipeline: pipeline)
-            #result = ts.range(current_start..current_end, aggregation: [@aggregation.type, (current_end - current_start).round * 1000])
-            #result << @timeseries.range_cmd(self,pipeline:)
-            #sample_subset = result.flatten(1).filter_map { |ts, val| ts.nil? ? nil : Sample.new(ts, val) }
+            @timeseries.range_cmd(self, pipeline: pipeline)
+
+            # result = ts.range(current_start..current_end, aggregation: [@aggregation.type, (current_end - current_start).round * 1000])
+            # result << @timeseries.range_cmd(self,pipeline:)
+            # sample_subset = result.flatten(1).filter_map { |ts, val| ts.nil? ? nil : Sample.new(ts, val) }
             # if nothing is found add an empty value so it can be interpolated later
-            #sample_subset << Redis::TimeSeries::Sample.new(current_start.to_i * 1000, BigDecimal("NaN")) if sample_subset.empty?
-            #samples << sample_subset
+            # sample_subset << Redis::TimeSeries::Sample.new(current_start.to_i * 1000, BigDecimal("NaN")) if sample_subset.empty?
+            # samples << sample_subset
 
             current_start = Time.at(current_start).advance(months: 1)
             current_end = Time.at(current_start).end_of_month - 1
           end
-          #samples.flatten
+          # samples.flatten
 
           @start_time = original_start_time
           @end_time = original_end_time
@@ -125,7 +125,7 @@ class Redis
             elsif @filter_by_range
               sliced_cmd_for_filter_by_range(pipeline)
             else
-              @timeseries.range_cmd(self,pipeline:)
+              @timeseries.range_cmd(self, pipeline: pipeline)
             end
 
             current_start = day_after_dst_transition
@@ -138,12 +138,11 @@ class Redis
           end_time = @end_time
           start_end_range = start_time..end_time
           @align = start_time
-          filter_by_range.select{|f| start_end_range.cover?(f)}.each {|range|
+          filter_by_range.select { |f| start_end_range.cover?(f) }.each do |range|
             @start_time = range.begin
             @end_time = range.end
-            result << @timeseries.range_cmd(self,pipeline:)
-
-          }
+            result << @timeseries.range_cmd(self, pipeline: pipeline)
+          end
           @start_time = start_time
           @end_time = end_time
           result
@@ -152,11 +151,10 @@ class Redis
         def sliced_cmd_for_filter_by_ts(pipeline)
           result = []
           all_filter_by_ts = @filter_by_ts
-          all_filter_by_ts.each_slice(128) {|filter_by_ts|
+          all_filter_by_ts.each_slice(128) do |filter_by_ts|
             @filter_by_ts = filter_by_ts
-            result << @timeseries.range_cmd(self,pipeline:)
-
-          }
+            result << @timeseries.range_cmd(self, pipeline: pipeline)
+          end
           @filter_by_ts = all_filter_by_ts
           result
         end
