@@ -78,7 +78,6 @@ class Redis
           original_aggregation = @aggregation
 
           Redis::TimeSeries.new(@timeseries.key)
-          []
           current_start = Time.at(start_time)
           current_end = Time.at(start_time).end_of_month - 1
           while current_end < original_end_time
@@ -87,17 +86,9 @@ class Redis
             @end_time = current_end
             @timeseries.range_cmd(self, pipeline: pipeline)
 
-            # result = ts.range(current_start..current_end, aggregation: [@aggregation.type, (current_end - current_start).round * 1000])
-            # result << @timeseries.range_cmd(self,pipeline:)
-            # sample_subset = result.flatten(1).filter_map { |ts, val| ts.nil? ? nil : Sample.new(ts, val) }
-            # if nothing is found add an empty value so it can be interpolated later
-            # sample_subset << Redis::TimeSeries::Sample.new(current_start.to_i * 1000, BigDecimal("NaN")) if sample_subset.empty?
-            # samples << sample_subset
-
             current_start = Time.at(current_start).advance(months: 1)
             current_end = Time.at(current_start).end_of_month - 1
           end
-          # samples.flatten
 
           @start_time = original_start_time
           @end_time = original_end_time

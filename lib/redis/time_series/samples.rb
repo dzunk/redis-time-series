@@ -80,6 +80,11 @@ class Redis
         self
       end
 
+      def filter_nan!(new_value: 0)
+        self.each { |sample| sample.value = new_value if sample.value.respond_to?("nan?") && sample.value.nan?}
+        self
+      end
+
       def filter_negative_values!
         self.each { |sample| sample.value = 0 if sample.value.blank? || sample.value <= 0 }
         self
