@@ -14,7 +14,7 @@ REDIS_PASSWORD = ENV['REDIS_PASSWORD'] || ""
 
 module RedisHelpers
   def redis
-    @redis ||= ConnectionPool.new(size: 25, timeout: 50) { Redis.new(host: REDIS_HOST,port: REDIS_PORT, password: REDIS_PASSWORD) }
+    @redis ||= ConnectionPool.new(size: 25, timeout: 50) { Redis.new(host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, db: 13) }
   end
 end
 
