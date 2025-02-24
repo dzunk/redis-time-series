@@ -84,7 +84,11 @@ class Redis
             self.aggregation = [@aggregation.type, ((current_end - current_start).round) * 1000]
             @start_time = current_start
             @end_time = current_end
-            @timeseries.range_cmd(self, pipeline: pipeline)
+            if @filter_by_range
+              sliced_cmd_for_filter_by_range(pipeline)
+            else
+              @timeseries.range_cmd(self, pipeline: pipeline)
+            end
 
             current_start = Time.at(current_start).advance(months: 1)
             current_end = Time.at(current_start).end_of_month - 1
