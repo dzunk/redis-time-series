@@ -51,10 +51,11 @@ class Redis
 
       def cmd
         result = []
+        queried_timestamps = []
         @timeseries.redis.with do |conn|
           result = conn.pipelined do |pipeline|
             if @aggregation&.duration == 2629746000
-              monthly_aggregation(pipeline)
+              queried_timestamps = monthly_aggregation(pipeline)
             elsif @aggregation&.duration == 86400000
               daily_aggregation(pipeline)
             else
@@ -68,7 +69,20 @@ class Redis
             end
           end
         end
-        Samples.new(result.flatten(1).filter_map { |timestamp, val| timestamp.nil? ? nil : Sample.new(timestamp, val) })
+
+        #flatten rows because they might come from multiple queries
+        result.map!{|row| row.flatten!}
+
+        #redis timeseries will return an empty array if there are no results.
+        #if @empty is set we want a sample with NaN instead
+        if @empty && queried_timestamps.present?
+          result.map!{|row|
+            timestamp = queried_timestamps.pop
+            row.blank? ? [timestamp,BigDecimal("NaN")] : row
+          }
+        end
+
+        Samples.new(result.filter_map { |timestamp, val| timestamp.nil? ? nil : Sample.new(timestamp, val) })
       end
 
       private
@@ -76,6 +90,7 @@ class Redis
           original_start_time = @start_time
           original_end_time = @end_time
           original_aggregation = @aggregation
+          queried_timestamps = []
 
           Redis::TimeSeries.new(@timeseries.key)
           current_start = Time.at(start_time)
@@ -84,6 +99,8 @@ class Redis
             self.aggregation = [@aggregation.type, ((current_end - current_start).round) * 1000]
             @start_time = current_start
             @end_time = current_end
+            queried_timestamps << current_start.to_i * 1000
+
             if @filter_by_range
               sliced_cmd_for_filter_by_range(pipeline)
             else
@@ -97,6 +114,7 @@ class Redis
           @start_time = original_start_time
           @end_time = original_end_time
           @aggregation = original_aggregation
+          queried_timestamps.reverse!
         end
 
         def daily_aggregation(pipeline)

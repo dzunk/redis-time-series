@@ -72,6 +72,23 @@ RSpec.describe Redis::TimeSeries::RangeCmd do
           expect(result.map { |sample| sample.value.to_f.round(1) }).to eq([35])
         end
       end
+
+      context "with @empty" do
+        it "returns a sample for missing months" do
+          timestamp1 = Time.parse("2024-01-01")
+          timestamp2 = Time.parse("2024-02-01")
+          timestamp3 = Time.parse("2024-03-01")
+          timestamp4 = Time.parse("2024-04-01")
+
+          values = { timestamp1 => 10, timestamp3 => 20 }
+          ts.madd(values)
+
+          range_cmd = described_class.new(timeseries: ts, start_time: timestamp1, end_time: timestamp4)
+          range_cmd.aggregation = ["avg", 2629746000]
+          result = range_cmd.cmd
+          expect(result.map { |sample| sample.time }).to eq([timestamp1, timestamp2, timestamp3])
+        end
+      end
     end
 
     context "with an aggregation duration of 1.day" do
