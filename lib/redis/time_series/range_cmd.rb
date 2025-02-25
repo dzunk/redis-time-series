@@ -70,16 +70,18 @@ class Redis
           end
         end
 
-        #flatten rows because they might come from multiple queries
-        result.map!{|row| row.flatten!}
 
         #redis timeseries will return an empty array if there are no results.
         #if @empty is set we want a sample with NaN instead
         if @empty && queried_timestamps.present?
+          result.map!{|row| row.flatten!(1)}
           result.map!{|row|
             timestamp = queried_timestamps.pop
-            row.blank? ? [timestamp,BigDecimal("NaN")] : row
+            row.blank? ? [timestamp, BigDecimal("NaN")] : row
           }
+
+        else
+          result.flatten!(1)
         end
 
         Samples.new(result.filter_map { |timestamp, val| timestamp.nil? ? nil : Sample.new(timestamp, val) })
