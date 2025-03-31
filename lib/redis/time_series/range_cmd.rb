@@ -71,14 +71,14 @@ class Redis
         end
 
 
-        #redis timeseries will return an empty array if there are no results.
-        #if @empty is set we want a sample with NaN instead
+        # redis timeseries will return an empty array if there are no results.
+        # if @empty is set we want a sample with NaN instead
         if @empty && queried_timestamps.present?
-          result.map!{|row| row.flatten!(1)}
-          result.map!{|row|
+          result.map! { |row| row.flatten!(1) }
+          result.map! do |row|
             timestamp = queried_timestamps.pop
             row.blank? ? [timestamp, BigDecimal("NaN")] : row
-          }
+          end
 
         else
           result.flatten!(1)
@@ -129,7 +129,7 @@ class Redis
 
           while current_end < ts_end_time
 
-            day_after_dst_transition = Time.at(TZInfo::Timezone.get(Time.now.zone).period_for_local(current_start).end_transition.timestamp_value + 1.day).beginning_of_day
+            day_after_dst_transition = Time.at(TZInfo::Timezone.get(Time.new(Time.now.year, 1, 1).zone).period_for_local(current_start).end_transition.timestamp_value + 1.day).beginning_of_day
             current_end = (day_after_dst_transition < ts_end_time ? Time.at(day_after_dst_transition) - 1 : ts_end_time)
 
             @start_time = current_start
