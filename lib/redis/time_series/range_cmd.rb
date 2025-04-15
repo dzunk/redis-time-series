@@ -54,7 +54,9 @@ class Redis
         queried_timestamps = []
         @timeseries.redis.with do |conn|
           result = conn.pipelined do |pipeline|
-            if @aggregation&.duration == 2629746000
+            if @aggregation&.duration == 31556952000
+              queried_timestamps = yearly_aggregation(pipeline)
+            elsif @aggregation&.duration == 2629746000
               queried_timestamps = monthly_aggregation(pipeline)
             elsif @aggregation&.duration == 86400000
               daily_aggregation(pipeline)
@@ -88,6 +90,37 @@ class Redis
       end
 
       private
+        def yearly_aggregation(pipeline)
+          original_start_time = @start_time
+          original_end_time = @end_time
+          original_aggregation = @aggregation
+          queried_timestamps = []
+
+          Redis::TimeSeries.new(@timeseries.key)
+          current_start = Time.at(start_time).beginning_of_year
+          current_end = Time.at(start_time).end_of_year - 1
+          while current_end < original_end_time
+            self.aggregation = [@aggregation.type, ((current_end - current_start).round) * 1000]
+            @start_time = current_start
+            @end_time = current_end
+            queried_timestamps << current_start.to_i * 1000
+
+            if @filter_by_range
+              sliced_cmd_for_filter_by_range(pipeline)
+            else
+              @timeseries.range_cmd(self, pipeline: pipeline)
+            end
+
+            current_start = Time.at(current_start).advance(years: 1)
+            current_end = Time.at(current_start).end_of_year - 1
+          end
+
+          @start_time = original_start_time
+          @end_time = original_end_time
+          @aggregation = original_aggregation
+          queried_timestamps.reverse!
+        end
+
         def monthly_aggregation(pipeline)
           original_start_time = @start_time
           original_end_time = @end_time
