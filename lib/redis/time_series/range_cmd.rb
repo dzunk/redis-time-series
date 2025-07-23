@@ -161,9 +161,21 @@ class Redis
           current_end = end_time - 1
 
           while current_end < ts_end_time
+            tz = TZInfo::Timezone.get(Time.new(Time.now.year, 1, 1).zone)
+            period = tz.period_for_local(current_start)
+            end_transition = period.end_transition
 
-            day_after_dst_transition = Time.at(TZInfo::Timezone.get(Time.new(Time.now.year, 1, 1).zone).period_for_local(current_start).end_transition.timestamp_value + 1.day).beginning_of_day
-            current_end = (day_after_dst_transition < ts_end_time ? Time.at(day_after_dst_transition) - 1 : ts_end_time)
+            if end_transition
+              # If there is a DST end transition
+              day_after_dst_transition = Time.at(end_transition.timestamp_value + 1.day).beginning_of_day
+              current_end = (day_after_dst_transition < ts_end_time ? Time.at(day_after_dst_transition) - 1 : ts_end_time)
+              # Move start to just after the transition for next iteration
+              next_current_start = day_after_dst_transition
+            else
+              # No DST: process the rest in one go and exit loop
+              current_end = ts_end_time
+              next_current_start = ts_end_time
+            end
 
             @start_time = current_start
             @end_time = current_end
@@ -176,7 +188,7 @@ class Redis
               @timeseries.range_cmd(self, pipeline: pipeline)
             end
 
-            current_start = day_after_dst_transition
+            current_start = next_current_start
           end
         end
 
