@@ -15,7 +15,7 @@ class Redis
           Result.new(
             TimeSeries.new(res[0]),
             res[1],
-            res[2].map { |s| Sample.new(s[0], s[1]) }
+            Samples.new(res[2].map { |s| Sample.new(s[0], s[1]) })
           )
         end)
       end

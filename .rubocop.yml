@@ -1,0 +1,490 @@
+inherit_from:
+  # - ../development/.rubocop.yml
+
+require:
+  # - rubocop-capybara
+  - rubocop-packaging
+  - rubocop-performance
+  - rubocop-rails
+  - rubocop-rspec
+
+AllCops:
+  Exclude:
+    - '**/config/**/*.rb'
+    - '**/db/schema.rb'
+    - 'db/schema.rb'
+    - '**/db/migrate/*.rb'
+    - 'db/migrate/*.rb'
+    - '**/node_modules/**/*'
+    - '**/templates/**/*'
+    - '**/tmp/**/*'
+    - '**/vendor/**/*'
+    - 'actionmailbox/test/dummy/**/*'
+    - 'actionpack/lib/action_dispatch/journey/parser.rb'
+    - 'actiontext/test/dummy/**/*'
+    - '**/bin/**/*'
+    - '**/spec/dummy/**/*.rb'
+    - 'spec/dummy/**/*.rb'
+    - '**/config/**/*.rb'
+    - '**/db/schema.rb'
+    - '**/db/migrate/*.rb'
+    - '**/node_modules/**/*'
+    - '**/templates/**/*'
+    - '**/tmp/**/*'
+    - '**/vendor/**/*'
+    - 'actionmailbox/test/dummy/**/*'
+    - 'actionpack/lib/action_dispatch/journey/parser.rb'
+    - 'actiontext/test/dummy/**/*'
+    - '**/bin/**/*'
+
+  TargetRubyVersion: 3.2
+  # RuboCop has a bunch of cops enabled by default. This setting tells RuboCop
+  # to ignore them, so only the ones explicitly set in this file are enabled.
+  DisabledByDefault: true
+  SuggestExtensions: false
+
+## Copy these settings, and AllCops/Exclude into the .rubocop.yml file of the project
+Metrics/BlockLength:
+  Exclude:
+    - "**/spec/**/*_spec.rb"
+    - Guardfile
+
+## These are our default FourIQ settings.
+## Add new or overriden settings here and remove the corresponding section from the rails version below.
+## Based on defaults used by Rails: https://github.com/rails/rails/blob/main/.rubocop.yml
+# Layout of code
+Layout/EndAlignment:
+  Enabled: true
+  AutoCorrect: true
+Layout/ExtraSpacing:
+  Enabled: true
+  AllowForAlignment: false
+Layout/LineLength:
+  Enabled: false
+
+# Check Metrics of code, like too many references, method length etc.
+Metrics/AbcSize:
+  Max: 30
+Metrics/MethodLength:
+  Max: 30
+
+Rails/HttpStatus:
+  Enabled: true
+  EnforcedStyle: symbolic
+Rails/TimeZone:
+  AutoCorrect: false
+  Enabled: false
+  EnforcedStyle: strict
+
+RSpec/AroundBlock:
+  Enabled: true
+RSpec/BeEq:
+  Enabled: true
+RSpec/BeEql:
+  Enabled: true
+RSpec/BeNil:
+  Enabled: true
+RSpec/BeforeAfterAll:
+  Enabled: true
+RSpec/ContextMethod:
+  Enabled: true
+RSpec/ContextWording:
+  Enabled: true
+  Prefixes:
+    - when
+    - with
+    - without
+    - if
+    - unless
+    - for
+    - before
+    - after
+    - during
+RSpec/DescribeClass:
+  Enabled: true
+RSpec/DescribeSymbol:
+  Enabled: true
+RSpec/DescribedClass:
+  Enabled: true
+RSpec/EmptyExampleGroup:
+  Enabled: true
+RSpec/EmptyHook:
+  Enabled: true
+RSpec/EmptyLineAfterExample:
+  Enabled: true
+RSpec/EmptyLineAfterExampleGroup:
+  Enabled: true
+RSpec/EmptyLineAfterFinalLet:
+  Enabled: true
+RSpec/EmptyLineAfterHook:
+  Enabled: true
+RSpec/EmptyLineAfterSubject:
+  Enabled: true
+RSpec/ExampleWithoutDescription:
+  Enabled: true
+  EnforcedStyle: single_line_only
+RSpec/ExampleWording:
+  Enabled: true
+RSpec/ExcessiveDocstringSpacing:
+  Enabled: true
+RSpec/ExpectActual:
+  Enabled: true
+RSpec/ExpectChange:
+  Enabled: true
+RSpec/ExpectInHook:
+  Enabled: true
+RSpec/ExpectOutput:
+  Enabled: true
+RSpec/Focus:
+  Enabled: true
+RSpec/HooksBeforeExamples:
+  Enabled: true
+RSpec/IdenticalEqualityAssertion:
+  Enabled: true
+RSpec/ImplicitExpect:
+  Enabled: true
+  EnforcedStyle: is_expected
+RSpec/InstanceVariable:
+  Enabled: true
+RSpec/ItBehavesLike:
+  Enabled: true
+RSpec/IteratedExpectation:
+  Enabled: true
+RSpec/LeakyConstantDeclaration:
+  Enabled: true
+RSpec/LetBeforeExamples:
+  Enabled: true
+RSpec/MissingExampleGroupArgument:
+  Enabled: true
+RSpec/MultipleDescribes:
+  Enabled: true
+
+Style/BlockDelimiters:
+  EnforcedStyle: line_count_based
+  #Style/FrozenStringLiteralComment:
+  #  EnforcedStyle: always
+Style/GuardClause:
+  Enabled: true
+Style/HashSyntax: # Use Ruby >= 1.9 syntax for hashes. Prefer { a: :b } over { :a => :b }.
+  Enabled: true
+  EnforcedShorthandSyntax: never
+Style/MethodCallWithArgsParentheses:
+  Enabled: true
+  EnforcedStyle: require_parentheses
+  Exclude:
+    - "**/*.jbuilder"
+  AllowedPatterns:
+  - puts
+  - get
+  - post
+  - it
+  - render
+  - head
+  - redirect_to
+  - raise
+  - instance_of?
+  - is_a?
+  - debug
+  - load_defaults
+  - shared_examples
+  - exit
+  - yield
+  - respond_with
+  - set_flash_message
+  - set_flash_message!
+  # Gemspec specific methods
+  - add_dependency
+  - add_development_dependency
+  # RSpec specific methods
+  - to
+  - to_not
+  - not_to
+  - be
+  - be_a
+  - be_an
+  - eq
+  - all
+  - include
+  - context
+  - describe
+  - feature
+  - it
+  - scenario
+  - have_text
+Style/MethodCallWithoutArgsParentheses:
+  Enabled: true
+Style/Not:
+  Enabled: true
+Style/SymbolArray:
+  Enabled: true
+  MinSize: 3
+Style/WordArray:
+  Enabled: true
+  MinSize: 3
+
+### The default rails rubocop.yml file as per 02-04-2022, taken from https://github.com/rails/rails/blob/main/.rubocop.yml
+Performance:
+  Exclude:
+    - '**/test/**/*'
+
+# Prefer assert_not over assert !
+Rails/AssertNot:
+  Include:
+    - '**/test/**/*'
+
+# Prefer assert_not_x over refute_x
+Rails/RefuteMethods:
+  Include:
+    - '**/test/**/*'
+
+Rails/IndexBy:
+  Enabled: true
+
+Rails/IndexWith:
+  Enabled: true
+
+# Prefer &&/|| over and/or.
+Style/AndOr:
+  Enabled: true
+
+# Align `when` with `case`.
+Layout/CaseIndentation:
+  Enabled: true
+
+Layout/ClosingHeredocIndentation:
+  Enabled: true
+
+Layout/ClosingParenthesisIndentation:
+  Enabled: true
+
+# Align comments with method definitions.
+Layout/CommentIndentation:
+  Enabled: true
+
+Layout/ElseAlignment:
+  Enabled: true
+
+Layout/EndOfLine:
+  Enabled: true
+
+Layout/EmptyLineAfterMagicComment:
+  Enabled: true
+
+Layout/EmptyLinesAroundAccessModifier:
+  Enabled: true
+  EnforcedStyle: only_before
+
+Layout/EmptyLinesAroundBlockBody:
+  Enabled: true
+
+# In a regular class definition, no empty lines around the body.
+Layout/EmptyLinesAroundClassBody:
+  Enabled: true
+
+# In a regular method definition, no empty lines around the body.
+Layout/EmptyLinesAroundMethodBody:
+  Enabled: true
+
+# In a regular module definition, no empty lines around the body.
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: true
+
+# Method definitions after `private` or `protected` isolated calls need one
+# extra level of indentation.
+Layout/IndentationConsistency:
+  Enabled: true
+  EnforcedStyle: indented_internal_methods
+
+# Two spaces, no tabs (for indentation).
+Layout/IndentationWidth:
+  Enabled: true
+
+Layout/LeadingCommentSpace:
+  Enabled: true
+
+Layout/SpaceAfterColon:
+  Enabled: true
+
+Layout/SpaceAfterComma:
+  Enabled: true
+
+Layout/SpaceAfterSemicolon:
+  Enabled: true
+
+Layout/SpaceAroundEqualsInParameterDefault:
+  Enabled: true
+
+Layout/SpaceAroundKeyword:
+  Enabled: true
+
+Layout/SpaceAroundOperators:
+  Enabled: true
+
+Layout/SpaceBeforeComma:
+  Enabled: true
+
+Layout/SpaceBeforeComment:
+  Enabled: true
+
+Layout/SpaceBeforeFirstArg:
+  Enabled: true
+
+Style/DefWithParentheses:
+  Enabled: true
+
+# Defining a method with parameters needs parentheses.
+Style/MethodDefParentheses:
+  Enabled: true
+
+Style/ExplicitBlockArgument:
+  Enabled: true
+
+Style/MapToHash:
+  Enabled: true
+
+Style/RedundantFreeze:
+  Enabled: true
+
+# Use `foo {}` not `foo{}`.
+Layout/SpaceBeforeBlockBraces:
+  Enabled: true
+
+# Use `foo { bar }` not `foo {bar}`.
+Layout/SpaceInsideBlockBraces:
+  Enabled: true
+  EnforcedStyleForEmptyBraces: space
+
+# Use `{ a: 1 }` not `{a:1}`.
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: true
+
+Layout/SpaceInsideParens:
+  Enabled: true
+
+# Check quotes usage according to lint rule below.
+Style/StringLiterals:
+  Enabled: false
+  EnforcedStyle: double_quotes
+
+# Detect hard tabs, no hard tabs.
+Layout/IndentationStyle:
+  Enabled: true
+
+# Empty lines should not have any spaces.
+Layout/TrailingEmptyLines:
+  Enabled: true
+
+# No trailing whitespace.
+Layout/TrailingWhitespace:
+  Enabled: true
+
+# Use quotes for string literals when they are enough.
+Style/RedundantPercentQ:
+  Enabled: true
+
+Lint/AmbiguousOperator:
+  Enabled: true
+
+Lint/AmbiguousRegexpLiteral:
+  Enabled: true
+
+Lint/DuplicateRequire:
+  Enabled: true
+
+Lint/DuplicateMethods:
+  Enabled: true
+
+Lint/ErbNewArguments:
+  Enabled: true
+
+Lint/EnsureReturn:
+  Enabled: true
+
+# Use my_method(my_arg) not my_method( my_arg ) or my_method my_arg.
+Lint/RequireParentheses:
+  Enabled: true
+
+Lint/RedundantStringCoercion:
+  Enabled: true
+
+Lint/UriEscapeUnescape:
+  Enabled: true
+
+Lint/UselessAssignment:
+  Enabled: true
+
+Lint/DeprecatedClassMethods:
+  Enabled: true
+
+Style/ParenthesesAroundCondition:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
+Style/RedundantBegin:
+  Enabled: true
+
+Style/RedundantReturn:
+  Enabled: true
+  AllowMultipleReturnValues: true
+
+Style/RedundantRegexpEscape:
+  Enabled: true
+
+Style/Semicolon:
+  Enabled: true
+  AllowAsExpressionSeparator: true
+
+# Prefer Foo.method over Foo::method
+Style/ColonMethodCall:
+  Enabled: true
+
+Style/TrivialAccessors:
+  Enabled: true
+
+Performance/BindCall:
+  Enabled: true
+
+Performance/FlatMap:
+  Enabled: true
+
+Performance/MapCompact:
+  Enabled: true
+
+Performance/SelectMap:
+  Enabled: true
+
+Performance/RedundantMerge:
+  Enabled: true
+
+Performance/StartWith:
+  Enabled: true
+
+Performance/EndWith:
+  Enabled: true
+
+Performance/RegexpMatch:
+  Enabled: true
+
+Performance/ReverseEach:
+  Enabled: true
+
+Performance/StringReplacement:
+  Enabled: true
+
+Performance/UnfreezeString:
+  Enabled: true
+
+Performance/DeletePrefix:
+  Enabled: true
+
+Performance/DeleteSuffix:
+  Enabled: true
+
+Performance/OpenStruct:
+  Enabled: true
+

@@ -9,8 +9,8 @@ RSpec.describe Redis::TimeSeries::Rule do
     )
   end
 
-  let(:source) { Redis::TimeSeries.create('test_rule_source') }
-  let(:destination) { Redis::TimeSeries.create('test_rule_dest') }
+  let(:source) { Redis::TimeSeries.new_or_create('test_rule_source') }
+  let(:destination) { Redis::TimeSeries.new_or_create('test_rule_dest') }
   let(:aggregation) { Redis::TimeSeries::Aggregation.new(:avg, 10.minutes) }
 
   before do
