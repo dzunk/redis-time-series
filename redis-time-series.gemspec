@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'tzinfo', '>= 2.0.6'
   spec.add_dependency 'tzinfo-data', '>= 1.2023.3'
 
-  spec.add_development_dependency 'activesupport', '~> 6.0'
+  spec.add_development_dependency 'activesupport', '~> 7.0'
   spec.add_development_dependency 'appraisal', '>= 2.5.0'
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'pry', '~> 0.13'
