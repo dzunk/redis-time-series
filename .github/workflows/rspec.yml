@@ -31,11 +31,6 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby_version }}
-    - name: Set up CodeClimate
-      run: |
-        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-        chmod +x ./cc-test-reporter
-        ./cc-test-reporter before-build
     - name: Install dependencies
       run: |
         bundle install
@@ -43,7 +38,10 @@ jobs:
     - name: Run specs
       run: bundle exec appraisal rake spec
     - name: Upload coverage report
-      run: ./cc-test-reporter after-build -t simplecov coverage/.resultset.json
+      uses: qltysh/qlty-action/coverage@v2
+      with:
+        oidc: true
+        files: coverage/.resultset.json
     - uses: actions/upload-artifact@v4
       with:
         name: coverage-${{ matrix.ruby_version }}-${{ matrix.image_version }}
