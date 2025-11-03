@@ -67,16 +67,24 @@ class Redis
 
       def min_values!
         self.each do |sample|
-          raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
-          sample.value = sample.value.reject(&:nan?).min
+          unless sample.value.is_a?(Enumerable)
+            raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}")
+          end
+
+          cleaned = sample.value.reject { |v| v.respond_to?(:nan?) && v.nan? }
+          sample.value = cleaned.min unless cleaned.empty?
         end
         self
       end
 
       def max_values!
         self.each do |sample|
-          raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
-          sample.value = sample.value.reject(&:nan?).max
+          unless sample.value.is_a?(Enumerable)
+            raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}")
+          end
+
+          cleaned = sample.value.reject { |v| v.respond_to?(:nan?) && v.nan? }
+          sample.value = cleaned.max unless cleaned.empty?
         end
         self
       end
