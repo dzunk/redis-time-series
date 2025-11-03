@@ -89,7 +89,6 @@ class Redis
         if @aggregation&.duration == 86400000
           first_timestamp_time = Time.at(result.first.first / 1000).strftime('%H:%M')
           result = result.select do |ts|
-            puts [Time.at(ts.first / 1000).strftime('%H:%M'),first_timestamp_time].inspect
             Time.at(ts.first / 1000).strftime('%H:%M') == first_timestamp_time
           end
         end

@@ -108,7 +108,6 @@ RSpec.describe Redis::TimeSeries::RangeCmd do
         range_cmd = described_class.new(timeseries: ts, start_time: timestamp1, end_time: timestamp8)
         range_cmd.aggregation = ["avg", 86400000]
         result = range_cmd.cmd.filter_map { |sample| sample.value.nan? ? nil : sample }
-        raise [[timestamp1,timestamp2,timestamp3,timestamp4,timestamp5,timestamp6,timestamp7,timestamp8],result.map { |sample| sample.time }].inspect
         expect(result.map { |sample| sample.time }).to eq([timestamp1, timestamp2, timestamp3, timestamp4, timestamp5, timestamp6, timestamp7,timestamp8])
         expect(result.map { |sample| sample.value.to_f.round(1) }).to eq([10, 30, 40, 45, 10, 30, 40, 45])
       end
