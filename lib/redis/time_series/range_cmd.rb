@@ -75,15 +75,23 @@ class Redis
 
         # redis timeseries will return an empty array if there are no results.
         # if @empty is set we want a sample with NaN instead
-        if @empty && queried_timestamps.present?
+        if @empty && !queried_timestamps.empty?
           result.map! { |row| row.flatten!(1) }
           result.map! do |row|
             timestamp = queried_timestamps.pop
             row.blank? ? [timestamp, BigDecimal("NaN")] : row
           end
-
         else
           result.flatten!(1)
+        end
+
+        # we need this because Redis Timeseries adds an extra record with a different time from the other records when transitioning from summer to winter time.
+        if @aggregation&.duration == 86400000
+          first_timestamp_time = Time.at(result.first.first / 1000).strftime('%H:%M')
+          result = result.select do |ts|
+            puts [Time.at(ts.first / 1000).strftime('%H:%M'),first_timestamp_time].inspect
+            Time.at(ts.first / 1000).strftime('%H:%M') == first_timestamp_time
+          end
         end
 
         Samples.new(result.filter_map { |timestamp, val| timestamp.nil? ? nil : Sample.new(timestamp, val) })
