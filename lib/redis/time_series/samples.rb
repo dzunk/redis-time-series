@@ -18,16 +18,16 @@ class Redis
         to_a(raw_timestamps: raw_timestamps).to_h
       end
 
-      #supports multiple merge strategies
-      #:keep_all merges all records even if the timestamp isn't present in each samples set
-      #:keep_equal only merges records if the timestamps are present in all sets
-      #:keep_first only merges records if the timestamp is present in the first set
-      #:keep_equal or keep_first is recommended if you want to do subtract_values! later.
+      # supports multiple merge strategies
+      # :keep_all merges all records even if the timestamp isn't present in each samples set
+      # :keep_equal only merges records if the timestamps are present in all sets
+      # :keep_first only merges records if the timestamp is present in the first set
+      # :keep_equal or keep_first is recommended if you want to do subtract_values! later.
       def self.merge(sample_sets:, merge_strategy: :keep_all)
         samples_hash = {}
-        sample_sets.each_with_index do |samples,index|
+        sample_sets.each_with_index do |samples, index|
           samples.each do |sample|
-            sample_default = (merge_strategy.to_sym != :keep_first || (merge_strategy.to_sym == :keep_first && index == 0) ? CalculatedSample.new(sample.ts_msec, []) : nil )
+            sample_default = (merge_strategy.to_sym != :keep_first || (merge_strategy.to_sym == :keep_first && index == 0) ? CalculatedSample.new(sample.ts_msec, []) : nil)
             calculated_sample = samples_hash.fetch(sample.time, sample_default)
             next if calculated_sample.blank?
             calculated_sample.value << sample.value
@@ -35,15 +35,15 @@ class Redis
           end
         end
         samples = Samples.new(samples_hash.values)
-        samples.select!{|sample| sample.value.count == sample_sets.count} if merge_strategy.to_sym == :keep_equal
-        samples.metadata = sample_sets.filter_map{|s| s.metadata}.inject({}){|result,metadata| metadata.merge(result)}
+        samples.select! { |sample| sample.value.count == sample_sets.count } if merge_strategy.to_sym == :keep_equal
+        samples.metadata = sample_sets.filter_map { |s| s.metadata }.inject({}) { |result, metadata| metadata.merge(result) }
         samples
       end
 
       def sum_values!
         self.each do |sample|
           raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
-          sample.value.map! { |v| v.respond_to?("nan?") && v.nan? ? 0 : v}
+          sample.value.map! { |v| v.respond_to?("nan?") && v.nan? ? 0 : v }
           sample.value = sample.value.sum
         end
         self
@@ -65,6 +65,30 @@ class Redis
         self
       end
 
+      def min_values!
+        self.each do |sample|
+          unless sample.value.is_a?(Enumerable)
+            raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}")
+          end
+
+          cleaned = sample.value.reject { |v| v.respond_to?(:nan?) && v.nan? }
+          sample.value = cleaned.min unless cleaned.empty?
+        end
+        self
+      end
+
+      def max_values!
+        self.each do |sample|
+          unless sample.value.is_a?(Enumerable)
+            raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}")
+          end
+
+          cleaned = sample.value.reject { |v| v.respond_to?(:nan?) && v.nan? }
+          sample.value = cleaned.max unless cleaned.empty?
+        end
+        self
+      end
+
       def multiply_values!(factor:)
         self.each { |sample| sample.value = sample.value * factor }
         self
@@ -82,7 +106,7 @@ class Redis
       end
 
       def filter_nan!(new_value: 0)
-        self.each { |sample| sample.value = new_value if sample.value.respond_to?("nan?") && sample.value.nan?}
+        self.each { |sample| sample.value = new_value if sample.value.respond_to?("nan?") && sample.value.nan? }
         self
       end
 
