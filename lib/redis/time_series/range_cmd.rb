@@ -86,10 +86,10 @@ class Redis
         end
 
         # we need this because Redis Timeseries adds an extra record with a different time from the other records when transitioning from summer to winter time.
-        if @aggregation&.duration == 86400000
-          first_timestamp_time = Time.at(result.first.first / 1000).strftime('%H:%M')
+        if @aggregation&.duration == 86400000 && !result.blank?
+          first_timestamp_time = Time.at(result.first.first / 1000).strftime("%H:%M")
           result = result.select do |ts|
-            Time.at(ts.first / 1000).strftime('%H:%M') == first_timestamp_time
+            Time.at(ts.first / 1000).strftime("%H:%M") == first_timestamp_time
           end
         end
 
