@@ -93,22 +93,22 @@ RSpec.describe Redis::TimeSeries::RangeCmd do
 
     context "with an aggregation duration of 1.day" do
       it "returns daily calculated values considering DST" do
-        timestamp1 = (summer_time - 2.days)
-        timestamp2 = (summer_time - 1.day)
-        timestamp3 = (summer_time)
-        timestamp4 = (summer_time + 2.days)
-        timestamp5 = (winter_time - 2.days)
-        timestamp6 = (winter_time - 1.day)
-        timestamp7 = (winter_time)
+        timestamp1 = (winter_time - 2.days)
+        timestamp2 = (winter_time - 1.day)
+        timestamp3 = (winter_time)
+        timestamp4 = (winter_time + 2.hours)
+        timestamp5 = (winter_time + 3.hours)
+        timestamp6 = (winter_time + 4.hours)
+        timestamp7 = (winter_time + 1.days)
         timestamp8 = (winter_time + 2.days)
 
-        values = { timestamp1 => 10, timestamp2 => 30, timestamp3 => 40, timestamp4 => 45, timestamp5 => 10, timestamp6 => 30, timestamp7 => 40, timestamp8 => 45 }
+        values = { timestamp1 => 10, timestamp2 => 30, timestamp3 => 40, timestamp4 => 45, timestamp5 => 10, timestamp6 => 30, timestamp7 => 40, timestamp8 => 45}
         ts.madd(values)
 
         range_cmd = described_class.new(timeseries: ts, start_time: timestamp1, end_time: timestamp8)
         range_cmd.aggregation = ["avg", 86400000]
         result = range_cmd.cmd.filter_map { |sample| sample.value.nan? ? nil : sample }
-        expect(result.map { |sample| sample.time }).to eq([timestamp1, timestamp2, timestamp3, timestamp4, timestamp5, timestamp6, timestamp7, timestamp8])
+        expect(result.map { |sample| sample.time }).to eq([timestamp1, timestamp2, timestamp3, timestamp4, timestamp5, timestamp6, timestamp7,timestamp8])
         expect(result.map { |sample| sample.value.to_f.round(1) }).to eq([10, 30, 40, 45, 10, 30, 40, 45])
       end
 
