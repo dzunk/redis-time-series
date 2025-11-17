@@ -29,7 +29,7 @@ class Redis
           samples.each do |sample|
             sample_default = (merge_strategy.to_sym != :keep_first || (merge_strategy.to_sym == :keep_first && index == 0) ? CalculatedSample.new(sample.ts_msec, []) : nil)
             calculated_sample = samples_hash.fetch(sample.time, sample_default)
-            next if calculated_sample.blank?
+            next if calculated_sample.nil?
             calculated_sample.value << sample.value
             samples_hash[sample.time] = calculated_sample
           end

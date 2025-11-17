@@ -6,9 +6,9 @@ RSpec.describe Redis::TimeSeries::Samples do
   let(:sample) { Redis::TimeSeries::Sample.new(timestamp, value) }
 
   let(:timestamp) { 1591590303100 }
-  let(:value) { '1.23' }
+  let(:value) { "1.23" }
 
-  describe '#to_a' do
+  describe "#to_a" do
     subject { samples.to_a }
 
     it { is_expected.to be_a Array }
@@ -24,7 +24,7 @@ RSpec.describe Redis::TimeSeries::Samples do
     end
   end
 
-  describe '#to_h' do
+  describe "#to_h" do
     subject { samples.to_h }
 
     it { is_expected.to be_a Hash }
@@ -132,6 +132,62 @@ RSpec.describe Redis::TimeSeries::Samples do
           result = merged_samples.avg_values!
           expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2, timestamp3, timestamp4])
           expect(result.map { |s| s.value }).to eq([2, 2, 4, 5])
+        end
+      end
+
+      describe "#min_values!" do
+        it "returns the min value of an array of values in a Samples object containing CalculatedSample objects" do
+          result = merged_samples.min_values!
+          expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2, timestamp3, timestamp4])
+          expect(result.map { |s| s.value }).to eq([1, 2, 4, 5])
+        end
+
+        context "when the values are all NaN" do
+          let(:nan_samples) { described_class.new([Redis::TimeSeries::CalculatedSample.new(timestamp1, [Float::NAN, Float::NAN])]) }
+
+          it "returns a samples object containing sample objects with NaN values" do
+            result = nan_samples.min_values!
+            expect(result.map { |s| s.ts_msec }).to eq([timestamp1])
+            expect(result.map { |s| s.value }).to eq([Float::NAN])
+          end
+        end
+
+        context "when the values contain NaN and correct values" do
+          let(:nan_samples) { described_class.new([Redis::TimeSeries::CalculatedSample.new(timestamp1, [Float::NAN, 1])]) }
+
+          it "returns a samples object containing sample objects with min value" do
+            result = nan_samples.min_values!
+            expect(result.map { |s| s.ts_msec }).to eq([timestamp1])
+            expect(result.map { |s| s.value }).to eq([1])
+          end
+        end
+      end
+
+      describe "#max_values!" do
+        it "returns the max value of an array of values in a Samples object containing CalculatedSample objects" do
+          result = merged_samples.max_values!
+          expect(result.map { |s| s.ts_msec }).to eq([timestamp1, timestamp2, timestamp3, timestamp4])
+          expect(result.map { |s| s.value }).to eq([3, 2, 4, 5])
+        end
+
+        context "when the values are all NaN" do
+          let(:nan_samples) { described_class.new([Redis::TimeSeries::CalculatedSample.new(timestamp1, [Float::NAN, Float::NAN])]) }
+
+          it "returns a samples object containing sample objects with NaN values" do
+            result = nan_samples.max_values!
+            expect(result.map { |s| s.ts_msec }).to eq([timestamp1])
+            expect(result.map { |s| s.value }).to eq([Float::NAN])
+          end
+        end
+
+        context "when the values contain NaN and correct values" do
+          let(:nan_samples) { described_class.new([Redis::TimeSeries::CalculatedSample.new(timestamp1, [Float::NAN, 1])]) }
+
+          it "returns a samples object containing sample objects with max value" do
+            result = nan_samples.min_values!
+            expect(result.map { |s| s.ts_msec }).to eq([timestamp1])
+            expect(result.map { |s| s.value }).to eq([1])
+          end
         end
       end
 
