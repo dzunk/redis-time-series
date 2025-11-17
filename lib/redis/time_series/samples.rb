@@ -60,7 +60,9 @@ class Redis
       def avg_values!
         self.each do |sample|
           raise(CalculationError, "expected an enumerable in sample.value, but sample is #{sample.inspect}") unless sample.value.is_a?(Enumerable)
-          sample.value = sample.value.sum / sample.value.length
+
+          cleaned = sample.value.reject { |v| v.respond_to?(:nan?) && v.nan? }
+          sample.value = cleaned.empty? ? Float::NAN : cleaned.sum / cleaned.length
         end
         self
       end
@@ -72,7 +74,8 @@ class Redis
           end
 
           cleaned = sample.value.reject { |v| v.respond_to?(:nan?) && v.nan? }
-          sample.value = cleaned.min unless cleaned.empty?
+
+          sample.value = cleaned.empty? ? Float::NAN : cleaned.min
         end
         self
       end
@@ -84,7 +87,7 @@ class Redis
           end
 
           cleaned = sample.value.reject { |v| v.respond_to?(:nan?) && v.nan? }
-          sample.value = cleaned.max unless cleaned.empty?
+          sample.value = cleaned.empty? ? Float::NAN : cleaned.max
         end
         self
       end
