@@ -6,6 +6,7 @@ container_id = `docker run -p 6379:6379 -dit --rm redislabs/redistimeseries`
 at_exit { system "docker stop #{container_id}" }
 
 require 'bundler/setup'
+require 'active_support'
 require 'active_support/core_ext/numeric/time'
 require 'redis'
 require 'redis-time-series'
