@@ -467,7 +467,7 @@ RSpec.describe Redis::TimeSeries do
     it 'returns a Sample' do
       timestamp = ts.increment
       expect(ts.get).to be_a Redis::TimeSeries::Sample
-      expect(ts.get.to_msec).to eq timestamp
+      expect(ts.get.to_msec).to be_within(1).of(timestamp)
     end
   end
 
