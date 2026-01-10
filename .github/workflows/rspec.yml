@@ -47,5 +47,5 @@ jobs:
         files: coverage/.resultset.json
     - uses: actions/upload-artifact@v4
       with:
-        name: coverage-${{ matrix.ruby_version }}-${{ matrix.image_version }}
+        name: coverage-${{ matrix.ruby_version }}-${{ matrix.redis_version }}
         path: coverage/
