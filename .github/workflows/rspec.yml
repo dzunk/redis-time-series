@@ -45,7 +45,3 @@ jobs:
       with:
         token: ${{secrets.QLTY_COVERAGE_TOKEN}}
         files: coverage/.resultset.json
-    - uses: actions/upload-artifact@v6
-      with:
-        name: coverage-${{ matrix.ruby_version }}-${{ replace(matrix.redis_version, ':', '_') }}
-        path: coverage/
