@@ -496,6 +496,8 @@ RSpec.describe Redis::TimeSeries do
   describe 'TS.INFO' do
     subject(:info) { ts.info }
 
+    let(:ts) { described_class.create(key, duplicate_policy: :block) }
+
     specify { expect { info }.to issue_command "TS.INFO #{key}" }
 
     it 'returns an info struct' do
