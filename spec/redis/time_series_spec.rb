@@ -76,6 +76,16 @@ RSpec.describe Redis::TimeSeries do
       end
     end
 
+    context 'with an object' do
+      let(:options) { { labels: { foo: label_object } } }
+      let(:label_object) { Class.new { def time_series_label; 'bar'; end }.new }
+
+      specify do
+        expect { create }.to issue_command "TS.CREATE #{key} LABELS foo bar"
+        expect(ts.labels).to eq('foo' => 'bar')
+      end
+    end
+
     context 'with all available options' do
       let(:options) do
         {
@@ -106,6 +116,16 @@ RSpec.describe Redis::TimeSeries do
         expect { ts.labels = { foo: 'bar' } }.to issue_command \
           "TS.ALTER #{key} LABELS foo bar"
         expect(ts.labels).to eq('foo' => 'bar')
+      end
+
+      context 'with an object' do
+        let(:label_object) { Class.new { def time_series_label; 'forty-two'; end }.new }
+
+        specify do
+          expect { ts.labels = { answer: label_object } }.to issue_command \
+            "TS.ALTER #{key} LABELS answer forty-two"
+          expect(ts.labels).to eq('answer' => 'forty-two')
+        end
       end
     end
   end

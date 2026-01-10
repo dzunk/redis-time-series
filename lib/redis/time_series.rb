@@ -31,6 +31,7 @@ class Redis
       # @param key [String] the Redis key to store time series data in
       # @option options [Hash] :labels
       #   A hash of label-value pairs to apply to this series.
+      #   Can include as a value any object that responds to #time_series_label
       # @option options [Redis] :redis (self.class.redis) a different Redis client to use
       # @option options [Integer] :retention
       #   Maximum age for samples compared to last event time (in milliseconds).
@@ -261,7 +262,7 @@ class Redis
           ('UNCOMPRESSED' if uncompressed),
           (['CHUNK_SIZE', chunk_size] if chunk_size),
           (DuplicatePolicy.new(duplicate_policy).to_a if duplicate_policy),
-          (['LABELS', labels.to_a] if labels&.any?)
+          (['LABELS', labels.map { |k, v| [k, v.try(:time_series_label) || v.to_s] }] if labels&.any?)
       self
     end
 
@@ -368,12 +369,14 @@ class Redis
 
     # Assign labels to the series using +TS.ALTER+
     #
-    # @param val [Hash] a hash of label-value pairs
+    # @param val [Hash] A hash of label-value pairs. Can include as a value any
+    #   object that responds to #time_series_label
     # @return [Hash] the assigned labels
     #
     # @see https://oss.redislabs.com/redistimeseries/commands/#tsalter
     def labels=(val)
-      cmd 'TS.ALTER', key, 'LABELS', val.to_a
+      label_value = val.map { |k, v| [k, v.try(:time_series_label) || v.to_s] }
+      cmd 'TS.ALTER', key, 'LABELS', label_value
     end
 
     # Add multiple values to the series.
