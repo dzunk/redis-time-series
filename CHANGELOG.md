@@ -6,6 +6,7 @@
 * Add Ruby 4.0 to build matrix (#92)
 * Fix flaky TS.GET spec (#93)
 * Support passing objects as label values (#94)
+* Test against latest version of Redis (#95)
 
 ## 0.8.1
 * Add Ruby 3.2 to build matrix (#82)
