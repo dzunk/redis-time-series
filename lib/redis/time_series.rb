@@ -111,10 +111,8 @@ class Redis
         data.reduce([]) do |memo, (key, value)|
           memo += parse_madd_values(key, value)
           memo
-        end.then do |args|
-          cmd('TS.MADD', args).each_with_index.map do |result, idx|
-            result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
-          end
+        end.then do |values|
+          cmd('TS.MADD', values).then { |result| Samples.from_madd(values, result) }
         end
       end
       alias multi_add madd
@@ -253,6 +251,12 @@ class Redis
       Sample.new(ts, value)
     end
 
+    # Return all samples in the series
+    # @return [Array<Sample>] an array of samples
+    def all
+      range(0..)
+    end
+
     # Issues a TS.CREATE command for the current series.
     # You should use class method {Redis::TimeSeries.create} instead.
     # @api private
@@ -334,6 +338,7 @@ class Redis
         Sample.new(timestamp, value)
       end
     end
+    alias last get
 
     # Increment the current value of the series.
     #
@@ -391,10 +396,8 @@ class Redis
     #   series
     #
     def madd(data)
-      args = self.class.send(:parse_madd_values, key, data)
-      cmd('TS.MADD', args).each_with_index.map do |result, idx|
-        result.is_a?(Redis::CommandError) ? result : Sample.new(result, args[idx][2])
-      end
+      values = self.class.send(:parse_madd_values, key, data)
+      cmd('TS.MADD', values).then { |result| Samples.from_madd(values, result) }
     end
     alias multi_add madd
     alias add_multiple madd
@@ -458,7 +461,7 @@ class Redis
           (range.end || '+'),
           (['COUNT', count] if count),
           Aggregation.parse(agg)&.to_a
-         ).map { |ts, val| Sample.new(ts, val) }
+         ).then { |result| Samples.from_range(result) }
     end
   end
 end
