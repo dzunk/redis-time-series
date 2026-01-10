@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
 system 'bundle install'
-system 'docker pull redislabs/redistimeseries:latest'
-container_id = `docker run -p 6379:6379 -dit --rm redislabs/redistimeseries`
+system 'docker pull redis:latest'
+container_id = `docker run -p 6379:6379 -dit --rm redis`
 at_exit { system "docker stop #{container_id}" }
 
 require 'bundler/setup'

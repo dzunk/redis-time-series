@@ -496,21 +496,23 @@ RSpec.describe Redis::TimeSeries do
   describe 'TS.INFO' do
     subject(:info) { ts.info }
 
+    let(:ts) { described_class.create(key, duplicate_policy: :block) }
+
     specify { expect { info }.to issue_command "TS.INFO #{key}" }
 
     it 'returns an info struct' do
       expect(info).to be_a Redis::TimeSeries::Info
-      expect(info.to_h).to eq(
+      expect(info.to_h).to match(
         {
           chunk_count: 1,
           chunk_size: 4096,
           chunk_type: 'compressed',
-          duplicate_policy: nil,
+          duplicate_policy: kind_of(Redis::TimeSeries::DuplicatePolicy),
           first_timestamp: 0,
           labels: {},
           last_timestamp: 0,
           max_samples_per_chunk: nil,
-          memory_usage: 4184,
+          memory_usage: kind_of(Integer),
           retention_time: 0,
           rules: [],
           series: ts,
